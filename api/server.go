@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -18,8 +17,4 @@ func NewServer(listenAddr string) *Server {
 func (s *Server) Start() error {
 	http.HandleFunc("/", s.handleMainPage)
 	return http.ListenAndServe(s.listenAddr, nil)
-}
-
-func (s *Server) handleMainPage(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprint(w, "Main page")
 }
