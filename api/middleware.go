@@ -13,14 +13,14 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		
 		if authHeader == "" {
-            http.Error(w, "Authorization header is required", http.StatusUnauthorized)
+            sendErrorResponse(w, "Authorization header is required", http.StatusUnauthorized)
             return
         }
 		
 		// Check if header has Bearer type of auth
 		parts := strings.Split(authHeader, " ")
         if len(parts) != 2 || parts[0] != "Bearer" {
-            http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+            sendErrorResponse(w, "Invalid Authorization header format", http.StatusUnauthorized)
             return
         }
 		
@@ -29,7 +29,7 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 
 		claims, err := utils.VerifyToken(tokenString)
 		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			sendErrorResponse(w, "Invalid token", http.StatusUnauthorized)
 		}
 
 		userID := strconv.FormatFloat(claims["userID"].(float64), 'f', -1, 64)

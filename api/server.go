@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Server struct {
@@ -15,6 +17,13 @@ func NewServer(listenAddr string) *Server {
 }
 
 func (s *Server) Start() error {
-	http.HandleFunc("/", s.handleMainPage)
-	return http.ListenAndServe(s.listenAddr, nil)
+	r := mux.NewRouter()
+
+	r.HandleFunc("/login", s.handleLogin).Methods("GET")
+
+	authRouter := r.PathPrefix("/").Subrouter()
+	authRouter.Use(AuthenticationMiddleware)
+	authRouter.HandleFunc("/", s.handleMainPage).Methods("GET")
+
+	return http.ListenAndServe(s.listenAddr, r)
 }
