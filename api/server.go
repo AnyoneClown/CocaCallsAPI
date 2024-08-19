@@ -22,13 +22,15 @@ func NewServer(listenAddr string, storage storage.CockroachDB) *Server {
 func (s *Server) Start() error {
 	r := mux.NewRouter()
 
+	apiRouter := r.PathPrefix("/api").Subrouter()
+
 	// Router for routes that do not require authentication
-	publicRouter := r.PathPrefix("/").Subrouter()
-	publicRouter.HandleFunc("/login", s.handleLogin).Methods("GET")
+	publicRouter := apiRouter.PathPrefix("/auth").Subrouter()
+	publicRouter.HandleFunc("/login", s.handleLogin).Methods("POST")
 	publicRouter.HandleFunc("/register", s.handleRegister).Methods("POST")
 
 	// Router for routes that require authentication
-	privateRouter := r.PathPrefix("/").Subrouter()
+	privateRouter := apiRouter.PathPrefix("/").Subrouter()
 	privateRouter.Use(AuthenticationMiddleware)
 	privateRouter.HandleFunc("/", s.handleMainPage).Methods("GET")
 

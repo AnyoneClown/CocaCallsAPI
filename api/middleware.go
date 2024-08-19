@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
@@ -30,9 +29,10 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 		claims, err := utils.VerifyToken(tokenString)
 		if err != nil {
 			sendErrorResponse(w, "Invalid token", http.StatusUnauthorized)
+			return
 		}
 
-		userID := strconv.FormatFloat(claims["userID"].(float64), 'f', -1, 64)
+		userID := claims["userID"].(string)
 		r.Header.Set("userID", userID)
 
 		next.ServeHTTP(w, r)
