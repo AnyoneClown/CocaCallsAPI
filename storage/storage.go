@@ -80,3 +80,4 @@ func (c *CockroachDB) GetUserByEmail(email string) (types.User, error) {
 
 	return user, nil
 }
+
