@@ -24,16 +24,18 @@ func NewCockroachDB() *CockroachDB {
 	}
 
 	dsn := os.Getenv("COCKROACH_DB_URL")
+    if dsn == "" {
+        log.Fatalf("COCKROACH_DB_URL environment variable not set")
+    }
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("failed to connect database", err)
+		log.Fatalf("COCKROACH_DB_URL environment variable not set")
 	}
 
+	
 	// Auto migrate models
-	err = db.AutoMigrate(&types.User{})
-	if err != nil {
-		log.Fatal("failed to migrate database", err)
-	}
+	db.AutoMigrate(&types.User{})
 
 	return &CockroachDB{db: db}
 }
@@ -42,6 +44,13 @@ func (c *CockroachDB) CreateUser(email, password string) (types.User, error) {
 	if err := types.ValidateUser(email, password); err != nil {
 		return types.User{}, err
 	}
+
+	var existingUser types.User
+    if err := c.db.Where("email = ?", email).First(&existingUser).Error; err == nil {
+        return types.User{}, fmt.Errorf("email already in use")
+    } else if err != gorm.ErrRecordNotFound {
+        return types.User{}, err
+    }
 
 	user := types.User{
 		ID:        uuid.New(),

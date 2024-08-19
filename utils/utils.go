@@ -24,7 +24,7 @@ var jwtSecretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 // Generate Auth toke for user with his UUID
 func GenerateToken(userID uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{}
-	claims["userID"] = userID
+	claims["userID"] = userID.String()
 	claims["exp"] = time.Now().Add(time.Hour * 3).Unix() // Token valid for 3 hour
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -64,6 +64,6 @@ func HashPassword(password string) (string, error) {
 
 // Compare a plain-text password with a hashed password
 func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+    return err == nil
 }
