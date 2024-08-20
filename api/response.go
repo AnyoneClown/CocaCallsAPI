@@ -20,13 +20,13 @@ func (r ErrorResponse) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-type UserCreatedResponse struct {
+type UserSuccessResponse struct {
 	Message string     `json:"status"`
 	User    types.User `json:"user"`
 	Code    int        `json:"code"`
 }
 
-func (r UserCreatedResponse) Encode() ([]byte, error) {
+func (r UserSuccessResponse) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
 
@@ -71,7 +71,7 @@ func sendErrorResponse(w http.ResponseWriter, errorMessage string, code int) {
 }
 
 func sendUserSuccessResponse(w http.ResponseWriter, successMessage string, code int, user types.User) {
-	response := UserCreatedResponse{
+	response := UserSuccessResponse{
 		Message: successMessage,
 		User:    user,
 		Code:    code,
@@ -85,6 +85,15 @@ func sendUserLoginResponse(w http.ResponseWriter, successMessage string, code in
 		User:    user,
 		Code:    code,
 		Token:   token,
+	}
+	sendResponse(w, code, response)
+}
+
+func sendUserMEResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword) {
+	response := UserMEResponse{
+		Message: successMessage,
+		User:    user,
+		Code:    code,
 	}
 	sendResponse(w, code, response)
 }

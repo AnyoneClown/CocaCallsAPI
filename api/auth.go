@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/AnyoneClown/CocaCallsAPI/types"
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
 )
 
@@ -104,5 +105,12 @@ func (s *Server) handleUserMe(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-	sendUserSuccessResponse(w, "User data retrieved successfully", http.StatusOK, user)
+	userResponse := types.UserWithoutPassword{
+		ID:        user.ID.String(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	sendUserMEResponse(w, "User data retrieved successfully", http.StatusOK, userResponse)
 }
