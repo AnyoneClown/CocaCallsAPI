@@ -5,6 +5,7 @@ import (
 
 	"github.com/AnyoneClown/CocaCallsAPI/storage"
 	"github.com/gorilla/mux"
+    "github.com/rs/cors"
 )
 
 type Server struct {
@@ -18,6 +19,7 @@ func NewServer(listenAddr string, storage storage.CockroachDB) *Server {
 		storage:    storage,
 	}
 }
+
 func (s *Server) Start() error {
     r := mux.NewRouter()
     r.StrictSlash(true)
@@ -34,9 +36,18 @@ func (s *Server) Start() error {
     // Router for routes that require authentication
     privateRouter := apiRouter.PathPrefix("/").Subrouter()
     privateRouter.Use(AuthenticationMiddleware)
-    
-    userRouter := privateRouter.PathPrefix("/user").Subrouter()
+
+    userRouter := privateRouter.PathPrefix("/user/").Subrouter()
     userRouter.HandleFunc("/me/", s.handleUserMe).Methods("GET")
 
-    return http.ListenAndServe(s.listenAddr, r)
+    // Configure CORS
+    corsOptions := cors.New(cors.Options{
+        AllowedOrigins:   []string{"http://localhost:3000"},
+        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowedHeaders:   []string{"Content-Type", "Authorization"},
+        ExposedHeaders:   []string{"Link"},
+        AllowCredentials: true,
+    })
+
+    return http.ListenAndServe(s.listenAddr, corsOptions.Handler(r))
 }

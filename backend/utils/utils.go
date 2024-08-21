@@ -3,23 +3,18 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("error loading .env file")
-	}
-}
-
-var jwtSecretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
+var jwtSecretKey = []byte(GetEnvVariable("JWT_SECRET_KEY"))
 
 // Generate Auth token for user with his UUID
 func GenerateToken(userID uuid.UUID, userEmail string) (string, error) {
@@ -86,4 +81,16 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
     err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
     return err == nil
+}
+
+func GetEnvVariable(key string) string {
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatal("Error loading .env file")
+    }
+    return os.Getenv(key)
+}
+
+func Render(w http.ResponseWriter, r *http.Request, component templ.Component) error {
+    return component.Render(r.Context(), w)
 }

@@ -26,7 +26,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-
+    
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		sendErrorResponse(w, "Failed to hash password", http.StatusInternalServerError)
