@@ -17,16 +17,28 @@ import IconifyIcon from 'components/base/IconifyIcon';
 import { useState, ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rootPaths } from 'routes/paths';
+import { loginUser, setToken, UserLoginResponse } from 'api/auth'
 import Image from 'components/base/Image';
 import logoWithText from '/Logo-with-text.png';
 
 const Login = (): ReactElement => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [message, setMessage] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    navigate(rootPaths.homeRoot);
+  const handleSubmit = async () => {
+    try {
+      const response: UserLoginResponse = await loginUser({ email, password });
+      setToken(response.token);
+      navigate(rootPaths.homeRoot);
+    } catch (error) {
+      console.error('Failed to login', error);
+      setMessage(error.message);
+    }
   };
+
 
   const handleClickShowPassword = () => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
@@ -59,6 +71,8 @@ const Login = (): ReactElement => {
             variant="filled"
             label="Email"
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             sx={{
               '.MuiFilledInput-root': {
                 bgcolor: 'grey.A100',
@@ -78,6 +92,8 @@ const Login = (): ReactElement => {
           <TextField
             variant="filled"
             label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             type={showPassword ? 'text' : 'password'}
             sx={{
               '.MuiFilledInput-root': {
@@ -116,15 +132,13 @@ const Login = (): ReactElement => {
               ),
             }}
           />
-          <FormGroup sx={{ ml: 1, width: 'fit-content' }}>
-            <FormControlLabel
-              control={<Checkbox />}
-              label="Keep me signed in"
-              sx={{
-                color: 'text.secondary',
-              }}
-            />
-          </FormGroup>
+          {
+            message && (
+              <Typography variant="body1" color="success.main" textAlign="center">
+                {message}
+              </Typography>
+            )
+          }
           <Button
             onClick={handleSubmit}
             sx={{

@@ -70,7 +70,14 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendUserLoginResponse(w, "Successfully logged in", http.StatusOK, user, token)
+	userResponse := types.UserWithoutPassword{
+		ID:        user.ID.String(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	sendUserLoginResponse(w, "Successfully logged in", http.StatusOK, userResponse, token)
 }
 
 func (s *Server) handleUserMe(w http.ResponseWriter, r *http.Request) {

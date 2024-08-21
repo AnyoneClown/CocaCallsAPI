@@ -28,15 +28,15 @@ const SignUp = (): ReactElement => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-  
+
     if (!email || !password) {
       setMessage('Please fill in all fields');
       return;
     }
-  
+
     try {
       const response = await registerUser({ email, password });
-  
+
       if (response.success) {
         setMessage(response.message);
         navigate(rootPaths.homeRoot);
@@ -150,11 +150,13 @@ const SignUp = (): ReactElement => {
           >
             Sign Up
           </Button>
-          {message && (
-            <Typography variant="body1" color="success.main" textAlign="center">
-              {message}
-            </Typography>
-          )}
+          {
+            message && (
+              <Typography variant="body1" color="success.main" textAlign="center">
+                {message}
+              </Typography>
+            )
+          }
           <Divider />
           <Typography textAlign="center" color="text.secondary" variant="body1">
             Or sign in using:

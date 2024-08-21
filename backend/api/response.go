@@ -31,10 +31,10 @@ func (r UserSuccessResponse) Encode() ([]byte, error) {
 }
 
 type UserLoginResponse struct {
-	Message string     `json:"status"`
-	User    types.User `json:"user"`
-	Code    int        `json:"code"`
-	Token   string     `json:"token"`
+	Message string                    `json:"status"`
+	User    types.UserWithoutPassword `json:"user"`
+	Code    int                       `json:"code"`
+	Token   string                    `json:"token"`
 }
 
 func (r UserLoginResponse) Encode() ([]byte, error) {
@@ -79,7 +79,7 @@ func sendUserSuccessResponse(w http.ResponseWriter, successMessage string, code 
 	sendResponse(w, code, response)
 }
 
-func sendUserLoginResponse(w http.ResponseWriter, successMessage string, code int, user types.User, token string) {
+func sendUserLoginResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword, token string) {
 	response := UserLoginResponse{
 		Message: successMessage,
 		User:    user,
