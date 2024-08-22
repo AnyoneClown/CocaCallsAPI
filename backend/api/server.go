@@ -26,22 +26,16 @@ func (s *Server) Start() error {
 
     apiRouter := r.PathPrefix("/api").Subrouter()
 
-    // Router for routes that do not require authentication
-    publicRouter := apiRouter.PathPrefix("/").Subrouter()
-
-    authRouter := publicRouter.PathPrefix("/auth").Subrouter()
+    // Auth router for all operations like OAuth 2.0, register
+    authRouter := apiRouter.PathPrefix("/auth").Subrouter()
     authRouter.HandleFunc("/register/", s.handleRegister).Methods("POST")
+    authRouter.HandleFunc("/{provider}/", s.signInWithProvider).Methods("GET")
+    authRouter.HandleFunc("/{provider}/callback/", s.callbackHandler).Methods("GET")
 
-    jwtRouter := publicRouter.PathPrefix("/jwt").Subrouter()
+    // JWT router for login and verify token
+    jwtRouter := apiRouter.PathPrefix("/jwt").Subrouter()
     jwtRouter.HandleFunc("/create/", s.handleJWTCreate).Methods("POST")
     jwtRouter.HandleFunc("/verify/", s.handleJWTVerify).Methods("POST")
-
-    // Router for routes that require authentication
-    privateRouter := apiRouter.PathPrefix("/").Subrouter()
-    privateRouter.Use(AuthenticationMiddleware)
-
-    userRouter := privateRouter.PathPrefix("/user/").Subrouter()
-    userRouter.HandleFunc("/me/", s.handleUserMe).Methods("GET")
 
     // Configure CORS
     corsOptions := cors.New(cors.Options{

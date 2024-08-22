@@ -48,3 +48,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Oauth client secret
+backend/client-secret.json

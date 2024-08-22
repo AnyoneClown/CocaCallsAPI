@@ -9,6 +9,8 @@ import (
 
 	"github.com/AnyoneClown/CocaCallsAPI/types"
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
+	"github.com/gorilla/mux"
+	"github.com/markbates/goth/gothic"
 )
 
 type AuthRequest struct {
@@ -127,23 +129,45 @@ func (s *Server) handleJWTCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleJWTVerify(w http.ResponseWriter, r *http.Request) {
-    authHeader := r.Header.Get("Authorization")
-    if authHeader == "" {
-        sendErrorResponse(w, "Authorization header missing", http.StatusUnauthorized)
-        return
-    }
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		sendErrorResponse(w, "Authorization header missing", http.StatusUnauthorized)
+		return
+	}
 
-    tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-    if tokenString == authHeader {
-        sendErrorResponse(w, "Invalid token format", http.StatusUnauthorized)
-        return
-    }
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == authHeader {
+		sendErrorResponse(w, "Invalid token format", http.StatusUnauthorized)
+		return
+	}
 
-    _, err := utils.VerifyToken(tokenString)
-    if err != nil {
-        sendErrorResponse(w, "Invalid token", http.StatusUnauthorized)
-        return
-    }
+	_, err := utils.VerifyToken(tokenString)
+	if err != nil {
+		sendErrorResponse(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
 
-    sendSuccessResponse(w, "Token is valid", http.StatusOK)
+	sendSuccessResponse(w, "Token is valid", http.StatusOK)
+}
+
+func (s *Server) signInWithProvider(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	provider := vars["provider"]
+	log.Printf("Sign in with provider: %s", provider)
+
+	gothic.BeginAuthHandler(w, r)
+}
+
+func (s *Server) callbackHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	provider := vars["provider"]
+	log.Printf("Callback for provider: %s", provider)
+
+	user, err := gothic.CompleteUserAuth(w, r)
+	if err != nil {
+		sendErrorResponse(w, "Failed to complete authentication", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("User: %+v", user)
+	sendSuccessResponse(w, "User logged successfully", http.StatusOK)
 }
