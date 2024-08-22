@@ -30,8 +30,11 @@ func (s *Server) Start() error {
     publicRouter := apiRouter.PathPrefix("/").Subrouter()
 
     authRouter := publicRouter.PathPrefix("/auth").Subrouter()
-    authRouter.HandleFunc("/login/", s.handleLogin).Methods("POST")
     authRouter.HandleFunc("/register/", s.handleRegister).Methods("POST")
+
+    jwtRouter := publicRouter.PathPrefix("/jwt").Subrouter()
+    jwtRouter.HandleFunc("/create/", s.handleJWTCreate).Methods("POST")
+    jwtRouter.HandleFunc("/verify/", s.handleJWTVerify).Methods("POST")
 
     // Router for routes that require authentication
     privateRouter := apiRouter.PathPrefix("/").Subrouter()
