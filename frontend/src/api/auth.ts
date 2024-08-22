@@ -49,3 +49,7 @@ export const setToken = (token: string) => {
   // Store the token in localStorage, cookies or elsewhere
   localStorage.setItem('authToken', token);
 };
+
+export const getToken = (): string | null => {
+  return localStorage.getItem('authToken');
+}

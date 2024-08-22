@@ -5,6 +5,7 @@ import PageLoader from 'components/loading/PageLoader';
 import Splash from 'components/loading/Splash';
 import { rootPaths } from './paths';
 import paths from './paths';
+import AuthGuard from './AuthGuard.tsx';
 
 const App = lazy<() => ReactElement>(() => import('App'));
 
@@ -31,11 +32,13 @@ const routes: RouteObject[] = [
       {
         path: paths.home,
         element: (
-          <MainLayout>
-            <Suspense fallback={<PageLoader />}>
-              <Outlet />
-            </Suspense>
-          </MainLayout>
+          <AuthGuard>
+            <MainLayout>
+              <Suspense fallback={<PageLoader />}>
+                <Outlet />
+              </Suspense>
+            </MainLayout>
+          </AuthGuard>
         ),
         children: [
           {
