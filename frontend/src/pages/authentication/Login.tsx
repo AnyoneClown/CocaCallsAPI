@@ -29,6 +29,11 @@ const Login = (): ReactElement => {
   const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    if (!email || !password) {
+      setMessage('Please fill in all fields');
+      return;
+    }
+
     try {
       const response: UserLoginResponse = await loginUser({ email, password });
       setToken(response.token);
@@ -132,13 +137,11 @@ const Login = (): ReactElement => {
               ),
             }}
           />
-          {
-            message && (
-              <Typography variant="body1" color="success.main" textAlign="center">
-                {message}
-              </Typography>
-            )
-          }
+          {message && (
+            <Typography variant="body1" color="error.main" textAlign="center" sx={{ mt: 2 }}>
+              {message}
+            </Typography>
+          )}
           <Button
             onClick={handleSubmit}
             sx={{

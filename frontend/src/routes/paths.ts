@@ -1,6 +1,6 @@
 export const rootPaths = {
   homeRoot: '/',
-  authRoot: 'auth',
+  authRoot: 'authentication',
   errorRoot: 'error',
 };
 

@@ -1,6 +1,6 @@
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useState, startTransition  } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getToken } from 'api/auth';
+import { getToken, verifyToken } from 'api/auth';
 import paths from 'routes/paths';
 
 interface AuthGuardProps {
@@ -9,16 +9,43 @@ interface AuthGuardProps {
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const navigate = useNavigate();
-  const token = getToken();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!token) {
-      console.log('No token found, redirecting to login...');
-      navigate(paths.login);
-    }
-  }, [token, navigate]);
+    const checkAuth = async () => {
+      const token = getToken();
+      if (!token) {
+        console.log('No token found, redirecting to login...');
+        setIsAuthenticated(false);
+        navigate(paths.login);
+        return;
+      }
 
-  return token ? <>{children}</> : null;
+      try {
+        const isValid = await verifyToken(token);
+        if (isValid) {
+          setIsAuthenticated(true);
+        } else {
+          console.log('Invalid token, redirecting to login...');
+          setIsAuthenticated(false);
+          navigate(paths.login);
+        }
+      } catch (error) {
+        console.error('Error verifying token:', error);
+        setIsAuthenticated(false);
+        navigate(paths.login);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  if (isAuthenticated === null) {
+    // Returning null ensures that nothing is rendered until authentication status is determined
+    return null;
+  }
+
+  return isAuthenticated ? <>{children}</> : null;
 };
 
 export default AuthGuard;

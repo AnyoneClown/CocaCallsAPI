@@ -28,7 +28,7 @@ export interface UserLoginResponse {
 }
 
 export const loginUser = async (credentials: { email: string; password: string }): Promise<UserLoginResponse> => {
-  const response = await fetch('http://localhost:8080/api/auth/login/', {
+  const response = await fetch('http://localhost:8080/api/jwt/create/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -53,3 +53,19 @@ export const setToken = (token: string) => {
 export const getToken = (): string | null => {
   return localStorage.getItem('authToken');
 }
+
+export const verifyToken = async (token: string): Promise<boolean> => {
+  try {
+    const response = await fetch('http://localhost:8080/api/jwt/verify/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
+};
