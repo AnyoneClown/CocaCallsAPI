@@ -11,20 +11,35 @@ import {
   InputAdornment,
 } from '@mui/material';
 import IconifyIcon from 'components/base/IconifyIcon';
-import { useState, ReactElement } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, ReactElement, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { rootPaths } from 'routes/paths';
 import { registerUser } from 'api/auth';
 import Image from 'components/base/Image';
 import logoWithText from '/Logo-with-text.png';
 
 const SignUp = (): ReactElement => {
+  const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const token = searchParams.get('token');
+    const error = searchParams.get('error');
+
+    if (token) {
+      // Store the token in localStorage or state management solution
+      localStorage.setItem('authToken', token);
+      // Redirect to home or dashboard
+      navigate(rootPaths.homeRoot);
+    } else if (error) {
+      setMessage(error);
+    }
+  }, [location, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -52,6 +67,9 @@ const SignUp = (): ReactElement => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
   };
 
+  const handleGoogleSignIn = () => {
+    window.location.href = "http://localhost:8080/api/auth/google/";
+  };
 
   return (
     <>
@@ -166,6 +184,7 @@ const SignUp = (): ReactElement => {
               startIcon={<IconifyIcon icon="flat-color-icons:google" />}
               variant="outlined"
               fullWidth
+              onClick={handleGoogleSignIn}
               sx={{
                 fontSize: 'subtitle2.fontSize',
                 fontWeight: 'fontWeightRegular',

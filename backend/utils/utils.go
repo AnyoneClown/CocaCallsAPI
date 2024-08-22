@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -12,9 +16,23 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
+var GoogleOauthConfig = &oauth2.Config{
+	RedirectURL:  GetEnvVariable("CLIENT_CALLBACK_URL"),
+	ClientID:     GetEnvVariable("CLIENT_ID"),
+	ClientSecret: GetEnvVariable("CLIENT_SECRET"),
+	Scopes: []string{
+		"https://www.googleapis.com/auth/userinfo.email",
+	},
+	Endpoint: google.Endpoint,
+}
+
 var jwtSecretKey = []byte(GetEnvVariable("JWT_SECRET_KEY"))
+
+const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 // Generate Auth token for user with his UUID
 func GenerateToken(userID uuid.UUID, userEmail string) (string, error) {
@@ -53,22 +71,22 @@ func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 }
 
 func ExtractClaimsFromToken(tokenString string) (jwt.MapClaims, error) {
-    token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-        }
-        return []byte(jwtSecretKey), nil
-    })
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(jwtSecretKey), nil
+	})
 
-    if err != nil {
-        return nil, fmt.Errorf("invalid token: %v", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %v", err)
+	}
 
-    if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-        return claims, nil
-    }
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
 
-    return nil, fmt.Errorf("invalid token claims")
+	return nil, fmt.Errorf("invalid token claims")
 }
 
 // Hashe a plain-text password
@@ -79,18 +97,46 @@ func HashPassword(password string) (string, error) {
 
 // Compare a plain-text password with a hashed password
 func CheckPasswordHash(password, hash string) bool {
-    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-    return err == nil
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func GetEnvVariable(key string) string {
-    err := godotenv.Load()
-    if err != nil {
-        log.Fatal("Error loading .env file")
-    }
-    return os.Getenv(key)
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	return os.Getenv(key)
 }
 
 func Render(w http.ResponseWriter, r *http.Request, component templ.Component) error {
-    return component.Render(r.Context(), w)
+	return component.Render(r.Context(), w)
+}
+
+func GenerateStateOauthCookie(w http.ResponseWriter) string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	state := base64.URLEncoding.EncodeToString(b)
+
+	return state
+}
+
+func GetUserDataFromGoogle(code string) ([]byte, error) {
+	// Use code to get token and get user info from Google.
+	token, err := GoogleOauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
+	}
+
+	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+	defer response.Body.Close()
+	contents, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed read response: %s", err.Error())
+	}
+
+	return contents, nil
 }

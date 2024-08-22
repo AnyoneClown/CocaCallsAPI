@@ -9,8 +9,7 @@ import (
 
 	"github.com/AnyoneClown/CocaCallsAPI/types"
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
-	"github.com/gorilla/mux"
-	"github.com/markbates/goth/gothic"
+	"golang.org/x/oauth2"
 )
 
 type AuthRequest struct {
@@ -150,24 +149,18 @@ func (s *Server) handleJWTVerify(w http.ResponseWriter, r *http.Request) {
 	sendSuccessResponse(w, "Token is valid", http.StatusOK)
 }
 
-func (s *Server) signInWithProvider(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	provider := vars["provider"]
-	log.Printf("Sign in with provider: %s", provider)
-
-	gothic.BeginAuthHandler(w, r)
+func (s *Server) oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
+    oauthState := utils.GenerateStateOauthCookie(w)
+    u := utils.GoogleOauthConfig.AuthCodeURL(oauthState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+    http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
-func (s *Server) callbackHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	provider := vars["provider"]
-	log.Printf("Callback for provider: %s", provider)
-
-	user, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		sendErrorResponse(w, "Failed to complete authentication", http.StatusInternalServerError)
-		return
-	}
-	log.Printf("User: %+v", user)
-	sendSuccessResponse(w, "User logged successfully", http.StatusOK)
+func (s *Server) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
+    data, err := utils.GetUserDataFromGoogle(r.FormValue("code"))
+    if err != nil {
+        log.Println(err.Error())
+        http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+        return
+    }
+    fmt.Fprintf(w, "UserInfo: %s\n", data)
 }

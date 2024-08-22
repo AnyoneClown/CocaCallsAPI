@@ -4,8 +4,11 @@ import (
 	"net/http"
 
 	"github.com/AnyoneClown/CocaCallsAPI/storage"
+	"github.com/AnyoneClown/CocaCallsAPI/utils"
 	"github.com/gorilla/mux"
-    "github.com/rs/cors"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/google"
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -24,13 +27,21 @@ func (s *Server) Start() error {
     r := mux.NewRouter()
     r.StrictSlash(true)
 
+    goth.UseProviders(
+        google.New(
+            utils.GetEnvVariable("CLIENT_ID"), 
+            utils.GetEnvVariable("CLIENT_SECRET"),
+            utils.GetEnvVariable("CLIENT_CALLBACK_URL"),
+        ),
+    )
+
     apiRouter := r.PathPrefix("/api").Subrouter()
 
     // Auth router for all operations like OAuth 2.0, register
     authRouter := apiRouter.PathPrefix("/auth").Subrouter()
     authRouter.HandleFunc("/register/", s.handleRegister).Methods("POST")
-    authRouter.HandleFunc("/{provider}/", s.signInWithProvider).Methods("GET")
-    authRouter.HandleFunc("/{provider}/callback/", s.callbackHandler).Methods("GET")
+    authRouter.HandleFunc("/google/", s.oauthGoogleLogin).Methods("GET")
+    authRouter.HandleFunc("/{provider}/callback/", s.oauthGoogleCallback).Methods("GET")
 
     // JWT router for login and verify token
     jwtRouter := apiRouter.PathPrefix("/jwt").Subrouter()
