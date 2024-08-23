@@ -110,7 +110,7 @@ func (s *Server) handleJWTCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Email)
+	token, err := utils.GenerateToken(user.ID.String(), user.Email)
 	if err != nil {
 		log.Printf("Error generating JWT: %v", err)
 		sendErrorResponse(w, "Failed to generate token", http.StatusInternalServerError)
@@ -162,5 +162,21 @@ func (s *Server) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
         http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
         return
     }
-    fmt.Fprintf(w, "UserInfo: %s\n", data)
+
+    var userInfo types.GoogleUserInfo
+    if err := json.Unmarshal(data, &userInfo); err != nil {
+        log.Println("Failed to parse user info:", err)
+        http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
+        return
+    }
+
+	token, err := utils.GenerateToken(userInfo.ID, userInfo.Email)
+	if err != nil {
+        log.Println(err.Error())
+        return
+    }
+
+    frontendURL := utils.GetEnvVariable("FRONTEND_URL")
+    redirectURL := fmt.Sprintf("%s/authentication/callback?token=%s", frontendURL, token)
+    http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }

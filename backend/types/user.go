@@ -25,6 +25,13 @@ type UserWithoutPassword struct {
 	UpdatedAt time.Time
 }
 
+type GoogleUserInfo struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Picture       string `json:"picture"`
+}
+
 func (u *User) Validate() error {
 	// Validate pattern for email
 	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`

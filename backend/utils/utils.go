@@ -13,7 +13,6 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
@@ -35,9 +34,9 @@ var jwtSecretKey = []byte(GetEnvVariable("JWT_SECRET_KEY"))
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 // Generate Auth token for user with his UUID
-func GenerateToken(userID uuid.UUID, userEmail string) (string, error) {
+func GenerateToken(userID string, userEmail string) (string, error) {
 	claims := jwt.MapClaims{}
-	claims["userID"] = userID.String()
+	claims["userID"] = userID
 	claims["email"] = userEmail
 	claims["exp"] = time.Now().Add(time.Hour * 3).Unix() // Token valid for 3 hour
 
