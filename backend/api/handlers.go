@@ -150,39 +150,39 @@ func (s *Server) handleJWTVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
-    oauthState := utils.GenerateStateOauthCookie(w)
-    u := utils.GoogleOauthConfig.AuthCodeURL(oauthState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
-    http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+	oauthState := utils.GenerateStateOauthCookie(w)
+	u := utils.GoogleOauthConfig.AuthCodeURL(oauthState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
 func (s *Server) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if err := r.URL.Query().Get("error"); err != "" {
-        frontendURL := utils.GetEnvVariable("FRONTEND_URL")
-        http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)
-        return
-    }
+		frontendURL := utils.GetEnvVariable("FRONTEND_URL")
+		http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)
+		return
+	}
 
-    data, err := utils.GetUserDataFromGoogle(r.FormValue("code"))
-    if err != nil {
-        log.Println(err.Error())
-        http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-        return
-    }
+	data, err := utils.GetUserDataFromGoogle(r.FormValue("code"))
+	if err != nil {
+		log.Println(err.Error())
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 
-    var userInfo types.GoogleUserInfo
-    if err := json.Unmarshal(data, &userInfo); err != nil {
-        log.Println("Failed to parse user info:", err)
-        http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
-        return
-    }
+	var userInfo types.GoogleUserInfo
+	if err := json.Unmarshal(data, &userInfo); err != nil {
+		log.Println("Failed to parse user info:", err)
+		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
+		return
+	}
 
 	token, err := utils.GenerateToken(userInfo.ID, userInfo.Email)
 	if err != nil {
-        log.Println(err.Error())
-        return
-    }
+		log.Println(err.Error())
+		return
+	}
 
-    frontendURL := utils.GetEnvVariable("FRONTEND_URL")
-    redirectURL := fmt.Sprintf("%s/authentication/callback?token=%s", frontendURL, token)
-    http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+	frontendURL := utils.GetEnvVariable("FRONTEND_URL")
+	redirectURL := fmt.Sprintf("%s/authentication/callback?token=%s", frontendURL, token)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
