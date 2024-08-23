@@ -156,6 +156,12 @@ func (s *Server) oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	if err := r.URL.Query().Get("error"); err != "" {
+        frontendURL := utils.GetEnvVariable("FRONTEND_URL")
+        http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)
+        return
+    }
+
     data, err := utils.GetUserDataFromGoogle(r.FormValue("code"))
     if err != nil {
         log.Println(err.Error())

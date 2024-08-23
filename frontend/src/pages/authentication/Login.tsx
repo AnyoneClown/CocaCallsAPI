@@ -49,6 +49,10 @@ const Login = (): ReactElement => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
   };
 
+  const handleGoogleSignIn = () => {
+    window.location.href = "http://localhost:8080/api/auth/google/";
+  };
+
   return (
     <>
       <Box component="figure" mb={5} mx="auto" textAlign="center">
@@ -158,6 +162,7 @@ const Login = (): ReactElement => {
             <Button
               startIcon={<IconifyIcon icon="flat-color-icons:google" />}
               variant="outlined"
+              onClick={handleGoogleSignIn}
               fullWidth
               sx={{
                 fontSize: 'subtitle2.fontSize',
@@ -165,17 +170,6 @@ const Login = (): ReactElement => {
               }}
             >
               Google
-            </Button>
-            <Button
-              startIcon={<IconifyIcon icon="logos:facebook" />}
-              variant="outlined"
-              fullWidth
-              sx={{
-                fontSize: 'subtitle2.fontSize',
-                fontWeight: 'fontWeightRegular',
-              }}
-            >
-              Facebook
             </Button>
           </Stack>
         </Stack>

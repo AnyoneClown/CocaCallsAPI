@@ -19,6 +19,7 @@ const AuthLayout = lazy<({ children }: PropsWithChildren) => ReactElement>(
 const Dashboard = lazy<() => ReactElement>(() => import('pages/dashboard/Dashboard'));
 const Login = lazy<() => ReactElement>(() => import('pages/authentication/Login'));
 const SignUp = lazy<() => ReactElement>(() => import('pages/authentication/SignUp'));
+const OAuthCallbackPage = lazy<() => ReactElement>(() => import('pages/authentication/OAuthCallbackPage'));
 const ErrorPage = lazy<() => ReactElement>(() => import('pages/error/ErrorPage'));
 
 const routes: RouteObject[] = [
@@ -64,6 +65,10 @@ const routes: RouteObject[] = [
           {
             path: paths.signup,
             element: <SignUp />,
+          },
+          {
+            path: paths.oauthCallback,
+            element: <OAuthCallbackPage />,
           },
         ],
       },

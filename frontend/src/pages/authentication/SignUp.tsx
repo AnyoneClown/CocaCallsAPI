@@ -32,9 +32,7 @@ const SignUp = (): ReactElement => {
     const error = searchParams.get('error');
 
     if (token) {
-      // Store the token in localStorage or state management solution
       localStorage.setItem('authToken', token);
-      // Redirect to home or dashboard
       navigate(rootPaths.homeRoot);
     } else if (error) {
       setMessage(error);
@@ -191,17 +189,6 @@ const SignUp = (): ReactElement => {
               }}
             >
               Google
-            </Button>
-            <Button
-              startIcon={<IconifyIcon icon="logos:facebook" />}
-              variant="outlined"
-              fullWidth
-              sx={{
-                fontSize: 'subtitle2.fontSize',
-                fontWeight: 'fontWeightRegular',
-              }}
-            >
-              Facebook
             </Button>
           </Stack>
         </Stack>
