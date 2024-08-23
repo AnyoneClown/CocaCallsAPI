@@ -7,10 +7,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/AnyoneClown/CocaCallsAPI/storage"
 	"github.com/AnyoneClown/CocaCallsAPI/types"
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
 	"golang.org/x/oauth2"
 )
+
+type AuthHandler struct {
+	Storage storage.CockroachDB
+}
+
+func NewAuthHandler(storage storage.CockroachDB) *AuthHandler {
+	return &AuthHandler{Storage: storage}
+}
 
 type AuthRequest struct {
 	Email    string `json:"email"`
@@ -21,57 +30,22 @@ type UserByIDRequest struct {
 	UserID string `json:"user_id"`
 }
 
-func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	var req AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		sendErrorResponse(w, "Failed to hash password", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
-	user, err := s.storage.CreateUser(req.Email, hashedPassword)
+	user, err := h.Storage.CreateUser(req.Email, hashedPassword)
 	if err != nil {
-		sendErrorResponse(w, "User with this email already exists", http.StatusBadRequest)
-		return
-	}
-
-	sendUserSuccessResponse(w, "Successfully created a user", http.StatusCreated, user)
-}
-
-func (s *Server) handleUserMe(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		sendErrorResponse(w, "Authorization header missing", http.StatusUnauthorized)
-		return
-	}
-
-	// Remove "Bearer " prefix if present
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	if tokenString == authHeader {
-		sendErrorResponse(w, "Invalid token format", http.StatusUnauthorized)
-		return
-	}
-
-	claims, err := utils.ExtractClaimsFromToken(tokenString)
-	if err != nil {
-		sendErrorResponse(w, "Can't extract claims", http.StatusUnauthorized)
-		return
-	}
-
-	email, ok := claims["email"].(string)
-	if !ok {
-		sendErrorResponse(w, "Email not found in token claims", http.StatusUnauthorized)
-		return
-	}
-
-	user, err := s.storage.GetUserByEmail(email)
-	if err != nil {
-		sendErrorResponse(w, "Can't find user with this email", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "User with this email already exists", http.StatusBadRequest)
 		return
 	}
 
@@ -82,38 +56,38 @@ func (s *Server) handleUserMe(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	sendUserMEResponse(w, "User data retrieved successfully", http.StatusOK, userResponse)
+	utils.SendUserSuccessResponse(w, "Successfully created a user", http.StatusCreated, userResponse)
 }
 
-func (s *Server) handleMainPage(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) HandleMainPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Main page")
 }
 
-func (s *Server) handleJWTCreate(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) HandleJWTCreate(w http.ResponseWriter, r *http.Request) {
 	var req AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	user, err := s.storage.GetUserByEmail(req.Email)
+	user, err := h.Storage.GetUserByEmail(req.Email)
 	if err != nil {
 		log.Printf("Error fetching user: %v", err)
-		sendErrorResponse(w, "Invalid email or password", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
 	match := utils.CheckPasswordHash(req.Password, user.Password)
 	if !match {
 		log.Printf("Password does not match for user: %v", req.Email)
-		sendErrorResponse(w, "Invalid email or password", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
 	token, err := utils.GenerateToken(user.ID.String(), user.Email)
 	if err != nil {
 		log.Printf("Error generating JWT: %v", err)
-		sendErrorResponse(w, "Failed to generate token", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
 
@@ -124,38 +98,38 @@ func (s *Server) handleJWTCreate(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	sendUserLoginResponse(w, "Successfully logged in", http.StatusOK, userResponse, token)
+	utils.SendUserLoginResponse(w, "Successfully logged in", http.StatusOK, userResponse, token)
 }
 
-func (s *Server) handleJWTVerify(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) HandleJWTVerify(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		sendErrorResponse(w, "Authorization header missing", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Authorization header missing", http.StatusUnauthorized)
 		return
 	}
 
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	if tokenString == authHeader {
-		sendErrorResponse(w, "Invalid token format", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Invalid token format", http.StatusUnauthorized)
 		return
 	}
 
 	_, err := utils.VerifyToken(tokenString)
 	if err != nil {
-		sendErrorResponse(w, "Invalid token", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Invalid token", http.StatusUnauthorized)
 		return
 	}
 
-	sendSuccessResponse(w, "Token is valid", http.StatusOK)
+	utils.SendSuccessResponse(w, "Token is valid", http.StatusOK)
 }
 
-func (s *Server) oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) OauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	oauthState := utils.GenerateStateOauthCookie(w)
 	u := utils.GoogleOauthConfig.AuthCodeURL(oauthState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
-func (s *Server) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) OauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if err := r.URL.Query().Get("error"); err != "" {
 		frontendURL := utils.GetEnvVariable("FRONTEND_URL")
 		http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)

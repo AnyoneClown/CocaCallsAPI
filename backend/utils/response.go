@@ -1,4 +1,4 @@
-package api
+package utils
 
 import (
 	"encoding/json"
@@ -30,9 +30,9 @@ func (r DefaultResponse) Encode() ([]byte, error) {
 }
 
 type UserSuccessResponse struct {
-	Message string     `json:"status"`
-	User    types.User `json:"user"`
-	Code    int        `json:"code"`
+	Message string                    `json:"status"`
+	User    types.UserWithoutPassword `json:"user"`
+	Code    int                       `json:"code"`
 }
 
 func (r UserSuccessResponse) Encode() ([]byte, error) {
@@ -71,7 +71,7 @@ func sendResponse(w http.ResponseWriter, code int, response Response) {
 	w.Write(encodedResponse)
 }
 
-func sendErrorResponse(w http.ResponseWriter, errorMessage string, code int) {
+func SendErrorResponse(w http.ResponseWriter, errorMessage string, code int) {
 	response := ErrorResponse{
 		Error: errorMessage,
 		Code:  code,
@@ -79,7 +79,7 @@ func sendErrorResponse(w http.ResponseWriter, errorMessage string, code int) {
 	sendResponse(w, code, response)
 }
 
-func sendSuccessResponse(w http.ResponseWriter, message string, code int) {
+func SendSuccessResponse(w http.ResponseWriter, message string, code int) {
 	response := DefaultResponse{
 		Message: message,
 		Code:    code,
@@ -87,7 +87,7 @@ func sendSuccessResponse(w http.ResponseWriter, message string, code int) {
 	sendResponse(w, code, response)
 }
 
-func sendUserSuccessResponse(w http.ResponseWriter, successMessage string, code int, user types.User) {
+func SendUserSuccessResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword) {
 	response := UserSuccessResponse{
 		Message: successMessage,
 		User:    user,
@@ -96,7 +96,7 @@ func sendUserSuccessResponse(w http.ResponseWriter, successMessage string, code 
 	sendResponse(w, code, response)
 }
 
-func sendUserLoginResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword, token string) {
+func SendUserLoginResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword, token string) {
 	response := UserLoginResponse{
 		Message: successMessage,
 		User:    user,
@@ -106,7 +106,7 @@ func sendUserLoginResponse(w http.ResponseWriter, successMessage string, code in
 	sendResponse(w, code, response)
 }
 
-func sendUserMEResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword) {
+func SendUserMEResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword) {
 	response := UserMEResponse{
 		Message: successMessage,
 		User:    user,

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	apiHandlers "github.com/AnyoneClown/CocaCallsAPI/api/handlers"
 	"github.com/AnyoneClown/CocaCallsAPI/storage"
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
 	"github.com/gorilla/mux"
@@ -11,9 +12,11 @@ import (
 	"github.com/rs/cors"
 )
 
+
 type Server struct {
 	listenAddr string
 	storage    storage.CockroachDB
+    authHandler *apiHandlers.AuthHandler
 }
 
 func NewServer(listenAddr string, storage storage.CockroachDB) *Server {
@@ -39,14 +42,14 @@ func (s *Server) Start() error {
 
     // Auth router for all operations like OAuth 2.0, register
     authRouter := apiRouter.PathPrefix("/auth").Subrouter()
-    authRouter.HandleFunc("/register/", s.handleRegister).Methods("POST")
-    authRouter.HandleFunc("/google/", s.oauthGoogleLogin).Methods("GET")
-    authRouter.HandleFunc("/{provider}/callback/", s.oauthGoogleCallback).Methods("GET")
+    authRouter.HandleFunc("/register/", s.authHandler.HandleRegister).Methods("POST")
+    authRouter.HandleFunc("/google/", s.authHandler.OauthGoogleLogin).Methods("GET")
+    authRouter.HandleFunc("/{provider}/callback/", s.authHandler.OauthGoogleCallback).Methods("GET")
 
     // JWT router for login and verify token
     jwtRouter := apiRouter.PathPrefix("/jwt").Subrouter()
-    jwtRouter.HandleFunc("/create/", s.handleJWTCreate).Methods("POST")
-    jwtRouter.HandleFunc("/verify/", s.handleJWTVerify).Methods("POST")
+    jwtRouter.HandleFunc("/create/", s.authHandler.HandleJWTCreate).Methods("POST")
+    jwtRouter.HandleFunc("/verify/", s.authHandler.HandleJWTVerify).Methods("POST")
 
     // Configure CORS
     corsOptions := cors.New(cors.Options{
