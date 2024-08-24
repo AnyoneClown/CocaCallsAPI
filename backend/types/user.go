@@ -13,7 +13,7 @@ type User struct {
 	ID            uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
 	Email         string    `gorm:"uniqueIndex"`
 	Password      string
-	GoogleID      string 	`gorm:"uniqueIndex"`
+	GoogleID      string
 	Picture       string
 	Provider      string
 	VerifiedEmail bool

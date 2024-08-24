@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	apiHandlers "github.com/AnyoneClown/CocaCallsAPI/api/handlers"
+	"github.com/AnyoneClown/CocaCallsAPI/api/handlers"
 	"github.com/AnyoneClown/CocaCallsAPI/storage"
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
 	"github.com/gorilla/mux"
@@ -16,13 +16,16 @@ import (
 type Server struct {
 	listenAddr string
 	storage    storage.CockroachDB
-    authHandler *apiHandlers.AuthHandler
+    authHandler *handlers.AuthHandler
 }
 
 func NewServer(listenAddr string, storage storage.CockroachDB) *Server {
 	return &Server{
 		listenAddr: listenAddr,
 		storage:    storage,
+        authHandler: &handlers.AuthHandler{
+            Storage: storage,
+        },
 	}
 }
 

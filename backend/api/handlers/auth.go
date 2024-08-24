@@ -18,8 +18,12 @@ type AuthHandler struct {
 }
 
 type AuthRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+    Email         string `json:"email"`
+    Password      string `json:"password"`
+    GoogleID      string `json:"google_id,omitempty"`
+    Picture       string `json:"picture,omitempty"`
+    Provider      string `json:"provider,omitempty"`
+    VerifiedEmail bool   `json:"verified_email,omitempty"`
 }
 
 type UserByIDRequest struct {
@@ -39,7 +43,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Storage.CreateUser(req.Email, hashedPassword)
+	user, err := h.Storage.CreateUser(req.Email, hashedPassword, req.GoogleID, req.Picture, req.Provider, req.VerifiedEmail)
 	if err != nil {
 		utils.SendErrorResponse(w, "User with this email already exists", http.StatusBadRequest)
 		return
