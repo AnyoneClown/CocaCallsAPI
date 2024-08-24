@@ -1,43 +1,65 @@
 package storage
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"time"
+    "fmt"
+    "log"
+    "os"
+    "time"
 
-	"github.com/AnyoneClown/CocaCallsAPI/types"
-	"github.com/google/uuid"
-	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+    "github.com/AnyoneClown/CocaCallsAPI/types"
+    "github.com/google/uuid"
+    "github.com/joho/godotenv"
+    "github.com/go-gormigrate/gormigrate/v2"
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
 )
 
 type CockroachDB struct {
-	db *gorm.DB
+    db *gorm.DB
 }
 
 func NewCockroachDB() *CockroachDB {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("error loading .env file")
-	}
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("error loading .env file")
+    }
 
-	dsn := os.Getenv("COCKROACH_DB_URL")
+    dsn := os.Getenv("COCKROACH_DB_URL")
     if dsn == "" {
         log.Fatalf("COCKROACH_DB_URL environment variable not set")
     }
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("COCKROACH_DB_URL environment variable not set")
-	}
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatalf("failed to connect to database: %v", err)
+    }
 
-	
-	// Auto migrate models
-	db.AutoMigrate(&types.User{})
+    if err := runMigrations(db); err != nil {
+        log.Fatalf("Failed to run migrations: %v", err)
+    }
 
-	return &CockroachDB{db: db}
+    return &CockroachDB{db: db}
+}
+
+func runMigrations(db *gorm.DB) error {
+    m := gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
+        {
+            ID: "202408241000",
+            Migrate: func(tx *gorm.DB) error {
+                return tx.AutoMigrate(&types.User{})
+            },
+            Rollback: func(tx *gorm.DB) error {
+                return tx.Migrator().DropTable("users")
+            },
+        },
+    })
+
+    if err := m.Migrate(); err != nil {
+        return fmt.Errorf("could not migrate: %v", err)
+    }
+
+    log.Println("Migration did run successfully")
+    return nil
 }
 
 func (c *CockroachDB) CreateUser(email, password string) (types.User, error) {
@@ -46,11 +68,11 @@ func (c *CockroachDB) CreateUser(email, password string) (types.User, error) {
 	}
 
 	var existingUser types.User
-    if err := c.db.Where("email = ?", email).First(&existingUser).Error; err == nil {
-        return types.User{}, fmt.Errorf("email already in use")
-    } else if err != gorm.ErrRecordNotFound {
-        return types.User{}, err
-    }
+	if err := c.db.Where("email = ?", email).First(&existingUser).Error; err == nil {
+		return types.User{}, fmt.Errorf("email already in use")
+	} else if err != gorm.ErrRecordNotFound {
+		return types.User{}, err
+	}
 
 	user := types.User{
 		ID:        uuid.New(),
@@ -80,4 +102,3 @@ func (c *CockroachDB) GetUserByEmail(email string) (types.User, error) {
 
 	return user, nil
 }
-

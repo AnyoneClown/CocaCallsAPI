@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
@@ -15,10 +15,6 @@ import (
 
 type AuthHandler struct {
 	Storage storage.CockroachDB
-}
-
-func NewAuthHandler(storage storage.CockroachDB) *AuthHandler {
-	return &AuthHandler{Storage: storage}
 }
 
 type AuthRequest struct {
@@ -57,10 +53,6 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.SendUserSuccessResponse(w, "Successfully created a user", http.StatusCreated, userResponse)
-}
-
-func (h *AuthHandler) HandleMainPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Main page")
 }
 
 func (h *AuthHandler) HandleJWTCreate(w http.ResponseWriter, r *http.Request) {
@@ -149,6 +141,8 @@ func (h *AuthHandler) OauthGoogleCallback(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
 		return
 	}
+	
+	
 
 	token, err := utils.GenerateToken(userInfo.ID, userInfo.Email)
 	if err != nil {
