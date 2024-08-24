@@ -2,6 +2,7 @@ export const rootPaths = {
   homeRoot: '/',
   authRoot: 'authentication',
   errorRoot: 'error',
+  loginRoot: '/authentication/login',
 };
 
 export default {

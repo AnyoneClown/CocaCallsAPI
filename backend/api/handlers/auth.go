@@ -18,12 +18,12 @@ type AuthHandler struct {
 }
 
 type AuthRequest struct {
-    Email         string `json:"email"`
-    Password      string `json:"password"`
-    GoogleID      string `json:"google_id,omitempty"`
-    Picture       string `json:"picture,omitempty"`
-    Provider      string `json:"provider,omitempty"`
-    VerifiedEmail bool   `json:"verified_email,omitempty"`
+	Email         string `json:"email"`
+	Password      string `json:"password"`
+	GoogleID      string `json:"google_id,omitempty"`
+	Picture       string `json:"picture,omitempty"`
+	Provider      string `json:"provider,omitempty"`
+	VerifiedEmail bool   `json:"verified_email,omitempty"`
 }
 
 type UserByIDRequest struct {
@@ -43,7 +43,15 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.Storage.CreateUser(req.Email, hashedPassword, req.GoogleID, req.Picture, req.Provider, req.VerifiedEmail)
+	userBody := &types.UserToCreate{
+		Email:         req.Email,
+		Password:      hashedPassword,
+		GoogleID:      req.GoogleID,
+		Picture:       req.Picture,
+		Provider:      req.Provider,
+		VerifiedEmail: req.VerifiedEmail,
+	}
+	user, err := h.Storage.CreateUser(*userBody)
 	if err != nil {
 		utils.SendErrorResponse(w, "User with this email already exists", http.StatusBadRequest)
 		return
@@ -126,35 +134,63 @@ func (h *AuthHandler) OauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) OauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	if err := r.URL.Query().Get("error"); err != "" {
-		frontendURL := utils.GetEnvVariable("FRONTEND_URL")
-		http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)
-		return
-	}
+    if err := r.URL.Query().Get("error"); err != "" {
+        frontendURL := utils.GetEnvVariable("FRONTEND_URL")
+        http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)
+        return
+    }
 
-	data, err := utils.GetUserDataFromGoogle(r.FormValue("code"))
-	if err != nil {
-		log.Println(err.Error())
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+    data, err := utils.GetUserDataFromGoogle(r.FormValue("code"))
+    if err != nil {
+        log.Println(err.Error())
+        http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
-	}
+    }
 
-	var userInfo types.GoogleUserInfo
-	if err := json.Unmarshal(data, &userInfo); err != nil {
-		log.Println("Failed to parse user info:", err)
-		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
-		return
-	}
-	
-	
+    var userInfo types.GoogleUserInfo
+    if err := json.Unmarshal(data, &userInfo); err != nil {
+        log.Println("Failed to parse user info:", err)
+        http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
+        return
+    }
 
-	token, err := utils.GenerateToken(userInfo.ID, userInfo.Email)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
+    user, err := h.Storage.GetUserByEmail(userInfo.Email)
+    if err != nil {
+        // User does not exist, create a new user
+        userBody := &types.UserToCreate{
+            Email:         userInfo.Email,
+            Password:      "",
+            GoogleID:      userInfo.GoogleID,
+            Picture:       userInfo.Picture,
+            Provider:      "google",
+            VerifiedEmail: userInfo.VerifiedEmail,
+        }
+        user, err = h.Storage.CreateUser(*userBody)
+        if err != nil {
+            log.Println("Failed to create user:", err)
+            http.Error(w, "Failed to create user", http.StatusInternalServerError)
+            return
+        }
+    } else if user.GoogleID == "" {
+        // User exists but does not have GoogleID, update the user
+        user.GoogleID = userInfo.GoogleID
+        user.Picture = userInfo.Picture
+        user.Provider = "google"
+        user.VerifiedEmail = userInfo.VerifiedEmail
+		if err := h.Storage.UpdateUser(&user); err != nil {
+            log.Println("Failed to update user:", err)
+            http.Error(w, "Failed to update user", http.StatusInternalServerError)
+            return
+        }
+    }
 
-	frontendURL := utils.GetEnvVariable("FRONTEND_URL")
-	redirectURL := fmt.Sprintf("%s/authentication/callback?token=%s", frontendURL, token)
-	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+    token, err := utils.GenerateToken(user.ID.String(), user.Email)
+    if err != nil {
+        log.Println(err.Error())
+        return
+    }
+
+    frontendURL := utils.GetEnvVariable("FRONTEND_URL")
+    redirectURL := fmt.Sprintf("%s/authentication/callback?token=%s", frontendURL, token)
+    http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }

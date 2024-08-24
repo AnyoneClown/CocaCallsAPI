@@ -22,6 +22,15 @@ type User struct {
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 
+type UserToCreate struct {
+	Email         string
+	Password      string
+	GoogleID      string
+	Picture       string
+	Provider      string
+	VerifiedEmail bool
+}
+
 type UserWithoutPassword struct {
 	ID        string `json:"id"`
 	Email     string `json:"email"`
@@ -30,7 +39,7 @@ type UserWithoutPassword struct {
 }
 
 type GoogleUserInfo struct {
-	ID            string `json:"id"`
+	GoogleID      string `json:"id"`
 	Email         string `json:"email"`
 	VerifiedEmail bool   `json:"verified_email"`
 	Picture       string `json:"picture"`

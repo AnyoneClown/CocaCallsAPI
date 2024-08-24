@@ -50,9 +50,9 @@ const SignUp = (): ReactElement => {
     try {
       const response = await registerUser({ email, password });
 
-      if (response.success) {
+      if (response.code == 201) {
         setMessage(response.message);
-        navigate(rootPaths.homeRoot);
+        navigate(rootPaths.loginRoot);
       } else {
         setMessage(response.error);
       }
