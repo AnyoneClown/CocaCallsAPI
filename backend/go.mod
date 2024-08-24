@@ -7,7 +7,6 @@ toolchain go1.23.0
 require (
 	github.com/a-h/templ v0.2.747
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/go-gormigrate/gormigrate/v2 v2.1.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1

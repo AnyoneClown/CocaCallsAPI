@@ -10,16 +10,17 @@ import (
 )
 
 type User struct {
-	ID            uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
-	Email         string    `gorm:"uniqueIndex"`
-	Password      string
-	GoogleID      string
-	Picture       string
-	Provider      string
-	VerifiedEmail bool
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	DeletedAt     gorm.DeletedAt `gorm:"index"`
+    ID            uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
+    Email         string    `gorm:"uniqueIndex"`
+    Password      string
+    GoogleID      string
+    Picture       string
+    Provider      string
+    VerifiedEmail bool
+    CreatedAt     time.Time
+    UpdatedAt     time.Time
+    DeletedAt     gorm.DeletedAt `gorm:"index"`
+    Subscription  Subscription   `gorm:"foreignKey:UserID"`
 }
 
 type UserToCreate struct {

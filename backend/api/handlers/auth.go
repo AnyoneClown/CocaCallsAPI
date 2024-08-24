@@ -26,9 +26,6 @@ type AuthRequest struct {
 	VerifiedEmail bool   `json:"verified_email,omitempty"`
 }
 
-type UserByIDRequest struct {
-	UserID string `json:"user_id"`
-}
 
 func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	var req AuthRequest

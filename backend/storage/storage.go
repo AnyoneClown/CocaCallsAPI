@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/AnyoneClown/CocaCallsAPI/types"
-	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -34,36 +33,7 @@ func NewCockroachDB() *CockroachDB {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	if err := runMigrations(db); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
-	}
-
 	return &CockroachDB{db: db}
-}
-
-func runMigrations(db *gorm.DB) error {
-	log.Println("Starting migrations...")
-
-	m := gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
-		{
-			ID: "202408241000",
-			Migrate: func(tx *gorm.DB) error {
-				log.Println("Running migration 202408241000...")
-				return tx.AutoMigrate(&types.User{})
-			},
-			Rollback: func(tx *gorm.DB) error {
-				log.Println("Rolling back migration 202408241000...")
-				return tx.Migrator().DropTable("users")
-			},
-		},
-	})
-
-	if err := m.Migrate(); err != nil {
-		return fmt.Errorf("could not migrate: %v", err)
-	}
-
-	log.Println("Migration did run successfully")
-	return nil
 }
 
 func (c *CockroachDB) CreateUser(user types.UserToCreate) (types.User, error) {
