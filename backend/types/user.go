@@ -10,17 +10,31 @@ import (
 )
 
 type User struct {
-    ID            uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
-    Email         string    `gorm:"uniqueIndex"`
-    Password      string
-    GoogleID      string
-    Picture       string
-    Provider      string
-    VerifiedEmail bool
-    CreatedAt     time.Time
-    UpdatedAt     time.Time
-    DeletedAt     gorm.DeletedAt `gorm:"index"`
-    Subscription  Subscription   `gorm:"foreignKey:UserID"`
+	ID            uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
+	Email         string    `gorm:"uniqueIndex"`
+	Password      string
+	GoogleID      string
+	Picture       string
+	Provider      string
+	VerifiedEmail bool
+	IsAdmin       bool
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
+	Subscription  Subscription   `gorm:"foreignKey:UserID"`
+}
+
+type UserResponse struct {
+	ID            uuid.UUID
+	Email         string
+	Picture       string
+	Provider      string
+	VerifiedEmail bool
+	IsAdmin       bool
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt
+	Subscription  *Subscription `gorm:"foreignKey:UserID"`
 }
 
 type UserToCreate struct {
@@ -30,6 +44,7 @@ type UserToCreate struct {
 	Picture       string
 	Provider      string
 	VerifiedEmail bool
+	IsAdmin       bool `gorm:"column:isadmin"`
 }
 
 type UserWithoutPassword struct {

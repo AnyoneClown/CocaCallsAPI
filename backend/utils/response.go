@@ -7,56 +7,14 @@ import (
 	"github.com/AnyoneClown/CocaCallsAPI/types"
 )
 
-type Response interface {
-	Encode() ([]byte, error)
+type Response struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-	Code  int    `json:"code"`
-}
-
-func (r ErrorResponse) Encode() ([]byte, error) {
-	return json.Marshal(r)
-}
-
-type DefaultResponse struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-}
-
-func (r DefaultResponse) Encode() ([]byte, error) {
-	return json.Marshal(r)
-}
-
-type UserSuccessResponse struct {
-	Message string                    `json:"status"`
-	User    types.UserWithoutPassword `json:"user"`
-	Code    int                       `json:"code"`
-}
-
-func (r UserSuccessResponse) Encode() ([]byte, error) {
-	return json.Marshal(r)
-}
-
-type UserLoginResponse struct {
-	Message string                    `json:"status"`
-	User    types.UserWithoutPassword `json:"user"`
-	Code    int                       `json:"code"`
-	Token   string                    `json:"token"`
-}
-
-func (r UserLoginResponse) Encode() ([]byte, error) {
-	return json.Marshal(r)
-}
-
-type UserMEResponse struct {
-	Message string                    `json:"status"`
-	User    types.UserWithoutPassword `json:"user"`
-	Code    int                       `json:"code"`
-}
-
-func (r UserMEResponse) Encode() ([]byte, error) {
+func (r Response) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
 
@@ -72,45 +30,50 @@ func sendResponse(w http.ResponseWriter, code int, response Response) {
 }
 
 func SendErrorResponse(w http.ResponseWriter, errorMessage string, code int) {
-	response := ErrorResponse{
-		Error: errorMessage,
+	response := Response{
 		Code:  code,
+		Error: errorMessage,
 	}
 	sendResponse(w, code, response)
 }
 
 func SendSuccessResponse(w http.ResponseWriter, message string, code int) {
-	response := DefaultResponse{
+	response := Response{
+		Code:    code,
 		Message: message,
-		Code:    code,
 	}
 	sendResponse(w, code, response)
 }
 
-func SendUserSuccessResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword) {
-	response := UserSuccessResponse{
-		Message: successMessage,
-		User:    user,
+func SendDataResponse(w http.ResponseWriter, message string, code int, data interface{}) {
+	response := Response{
 		Code:    code,
+		Message: message,
+		Data:    data,
 	}
 	sendResponse(w, code, response)
 }
 
-func SendUserLoginResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword, token string) {
-	response := UserLoginResponse{
-		Message: successMessage,
-		User:    user,
+func SendUserResponse(w http.ResponseWriter, message string, code int, user types.UserWithoutPassword) {
+	response := Response{
 		Code:    code,
-		Token:   token,
+		Message: message,
+		Data:    user,
 	}
 	sendResponse(w, code, response)
 }
 
-func SendUserMEResponse(w http.ResponseWriter, successMessage string, code int, user types.UserWithoutPassword) {
-	response := UserMEResponse{
-		Message: successMessage,
-		User:    user,
+func SendUserLoginResponse(w http.ResponseWriter, message string, code int, user types.UserWithoutPassword, token string) {
+	response := Response{
 		Code:    code,
+		Message: message,
+		Data: struct {
+			User  types.UserWithoutPassword `json:"user"`
+			Token string                    `json:"token"`
+		}{
+			User:  user,
+			Token: token,
+		},
 	}
 	sendResponse(w, code, response)
 }

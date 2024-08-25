@@ -12,56 +12,60 @@ import (
 	"github.com/rs/cors"
 )
 
-
 type Server struct {
-	listenAddr string
-	storage    storage.CockroachDB
-    authHandler *handlers.AuthHandler
+	listenAddr     string
+	storage        storage.CockroachDB
+	defaultHandler *handlers.DefaultHandler
 }
 
 func NewServer(listenAddr string, storage storage.CockroachDB) *Server {
 	return &Server{
 		listenAddr: listenAddr,
 		storage:    storage,
-        authHandler: &handlers.AuthHandler{
-            Storage: storage,
-        },
+		defaultHandler: &handlers.DefaultHandler{
+			Storage: storage,
+		},
 	}
 }
 
 func (s *Server) Start() error {
-    r := mux.NewRouter()
-    r.StrictSlash(true)
+	r := mux.NewRouter()
+	r.StrictSlash(true)
 
-    goth.UseProviders(
-        google.New(
-            utils.GetEnvVariable("CLIENT_ID"), 
-            utils.GetEnvVariable("CLIENT_SECRET"),
-            utils.GetEnvVariable("CLIENT_CALLBACK_URL"),
-        ),
-    )
+	goth.UseProviders(
+		google.New(
+			utils.GetEnvVariable("CLIENT_ID"),
+			utils.GetEnvVariable("CLIENT_SECRET"),
+			utils.GetEnvVariable("CLIENT_CALLBACK_URL"),
+		),
+	)
 
-    apiRouter := r.PathPrefix("/api").Subrouter()
+	apiRouter := r.PathPrefix("/api").Subrouter()
 
-    // Auth router for all operations like OAuth 2.0, register
-    authRouter := apiRouter.PathPrefix("/auth").Subrouter()
-    authRouter.HandleFunc("/register/", s.authHandler.HandleRegister).Methods("POST")
-    authRouter.HandleFunc("/google/", s.authHandler.OauthGoogleLogin).Methods("GET")
-    authRouter.HandleFunc("/{provider}/callback/", s.authHandler.OauthGoogleCallback).Methods("GET")
+	// Auth router for all operations like OAuth 2.0, register
+	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
+	authRouter.HandleFunc("/register/", s.defaultHandler.HandleRegister).Methods("POST")
+	authRouter.HandleFunc("/google/", s.defaultHandler.OauthGoogleLogin).Methods("GET")
+	authRouter.HandleFunc("/{provider}/callback/", s.defaultHandler.OauthGoogleCallback).Methods("GET")
 
-    // JWT router for login and verify token
-    jwtRouter := apiRouter.PathPrefix("/jwt").Subrouter()
-    jwtRouter.HandleFunc("/create/", s.authHandler.HandleJWTCreate).Methods("POST")
-    jwtRouter.HandleFunc("/verify/", s.authHandler.HandleJWTVerify).Methods("POST")
+	// JWT router for login and verify token
+	jwtRouter := apiRouter.PathPrefix("/jwt").Subrouter()
+	jwtRouter.HandleFunc("/create/", s.defaultHandler.HandleJWTCreate).Methods("POST")
+	jwtRouter.HandleFunc("/verify/", s.defaultHandler.HandleJWTVerify).Methods("POST")
 
-    // Configure CORS
-    corsOptions := cors.New(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:3000"},
-        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-        AllowedHeaders:   []string{"Content-Type", "Authorization"},
-        ExposedHeaders:   []string{"Link"},
-        AllowCredentials: true,
-    })
+	// User routes
+	userRouter := apiRouter.PathPrefix("/users").Subrouter()
+	userRouter.Use(AuthenticationMiddleware)
+	userRouter.HandleFunc("/", s.defaultHandler.GetUsers).Methods("GET")
 
-    return http.ListenAndServe(s.listenAddr, corsOptions.Handler(r))
+	// Configure CORS
+	corsOptions := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+	})
+
+	return http.ListenAndServe(s.listenAddr, corsOptions.Handler(r))
 }
