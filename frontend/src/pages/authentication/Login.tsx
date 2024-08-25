@@ -36,7 +36,7 @@ const Login = (): ReactElement => {
 
     try {
       const response: UserLoginResponse = await loginUser({ email, password });
-      setToken(response.token);
+      setToken(response.data.token);
       navigate(rootPaths.homeRoot);
     } catch (error) {
       console.error('Failed to login', error);

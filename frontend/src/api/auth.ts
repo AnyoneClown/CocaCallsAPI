@@ -16,15 +16,17 @@ export const registerUser = async (userData: { email: string; password: string }
 
 export interface UserLoginResponse {
   message: string;
-  user: {
-    id: string;
-    email: string;
-    CreatedAt: string;
-    UpdatedAt: string;
-    DeletedAt: string;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      CreatedAt: string;
+      UpdatedAt: string;
+      DeletedAt: string;
+    },
+    token: string;
   };
   code: number;
-  token: string;
 }
 
 export const loginUser = async (credentials: { email: string; password: string }): Promise<UserLoginResponse> => {
