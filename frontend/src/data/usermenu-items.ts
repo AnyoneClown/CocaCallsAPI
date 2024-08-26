@@ -1,5 +1,6 @@
 interface UserMenuItem {
   id: number;
+  path: string;
   title: string;
   icon: string;
   color?: string;
@@ -8,36 +9,28 @@ interface UserMenuItem {
 const userMenuItems: UserMenuItem[] = [
   {
     id: 1,
+    path: '/profile',
     title: 'View Profile',
     icon: 'mingcute:user-2-fill',
     color: 'text.primary',
   },
   {
     id: 2,
-    title: 'Account Settings',
-    icon: 'material-symbols:settings-account-box-rounded',
-    color: 'text.primary',
-  },
-  {
-    id: 3,
+    path: '!#',
     title: 'Notifications',
     icon: 'ion:notifications',
     color: 'text.primary',
   },
   {
-    id: 4,
-    title: 'Switch Account',
-    icon: 'material-symbols:switch-account',
-    color: 'text.primary',
-  },
-  {
-    id: 5,
+    id: 3,
+    path: '!#',
     title: 'Help Center',
     icon: 'material-symbols:live-help',
     color: 'text.primary',
   },
   {
-    id: 6,
+    id: 4,
+    path: '!#',
     title: 'Logout',
     icon: 'material-symbols:logout',
     color: 'error.main',

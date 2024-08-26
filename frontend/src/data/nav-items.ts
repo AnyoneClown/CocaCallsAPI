@@ -16,10 +16,10 @@ const navItems: NavItem[] = [
   },
   {
     id: 2,
-    path: '#!',
+    path: '/profile',
     title: 'Profile',
     icon: 'clarity:user-line',
-    active: false,
+    active: true,
   },
   {
     id: 3,

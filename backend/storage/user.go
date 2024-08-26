@@ -59,7 +59,21 @@ func (c *CockroachDB) CreateUser(user types.UserToCreate) (types.User, error) {
 
 func (c *CockroachDB) GetUserByEmail(email string) (types.User, error) {
 	var user types.User
-	result := c.db.Where("email = ?", email).First(&user)
+	result := c.db.Preload("Subscription").Where("email = ?", email).First(&user)
+
+	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
+		if result.Error == gorm.ErrRecordNotFound {
+			return types.User{}, fmt.Errorf("user not found")
+		}
+		return types.User{}, result.Error
+	}
+
+	return user, nil
+}
+
+func (c *CockroachDB) GetUserByID(userID string) (types.User, error) {
+	var user types.User
+	result := c.db.Preload("Subscription").Omit("password").Where("id = ?", userID).First(&user)
 
 	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -87,10 +101,9 @@ func (c *CockroachDB) UpdateUser(user *types.User) error {
 	return nil
 }
 
-func (c *CockroachDB) GetUsers() ([]types.UserResponse, error) {
-	var userResponses []types.UserResponse
-	if err := c.db.Table("users").
-		Preload("Subscription").
+func (c *CockroachDB) GetUsers() ([]types.User, error) {
+	var userResponses []types.User
+	if err := c.db.Preload("Subscription").
 		Omit("password").
 		Find(&userResponses).Error; err != nil {
 		return nil, err

@@ -1,3 +1,5 @@
+import * as jwtDecode from "jwt-decode";
+
 export const registerUser = async (userData: { email: string; password: string }) => {
   const response = await fetch('http://localhost:8080/api/auth/register/', {
     method: 'POST',
@@ -52,8 +54,8 @@ export const setToken = (token: string) => {
   localStorage.setItem('authToken', token);
 };
 
-export const getToken = (): string | null => {
-  return localStorage.getItem('authToken');
+export const getToken = (): string => {
+  return localStorage.getItem('authToken') ?? '';
 }
 
 export const verifyToken = async (token: string): Promise<boolean> => {
@@ -70,4 +72,10 @@ export const verifyToken = async (token: string): Promise<boolean> => {
     console.error('Error verifying token:', error);
     return false;
   }
+};
+
+export const getUserIDFromToken = (token: string): string | null => {
+  const arrayToken = token.split('.');
+  const decodedToken = JSON.parse(atob(arrayToken[1]));
+  return decodedToken.userID;
 };

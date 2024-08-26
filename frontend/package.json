@@ -19,6 +19,7 @@
     "@mui/x-data-grid": "^7.6.2",
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
+    "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",

@@ -3,6 +3,7 @@ export const rootPaths = {
   authRoot: 'authentication',
   errorRoot: 'error',
   loginRoot: '/authentication/login',
+  profileRoot: 'profile',
 };
 
 export default {
@@ -11,4 +12,5 @@ export default {
   signup: `/${rootPaths.authRoot}/sign-up`,
   oauthCallback: `/${rootPaths.authRoot}/callback`,
   404: `/${rootPaths.errorRoot}/404`,
+  profile: `/${rootPaths.profileRoot}`,
 };

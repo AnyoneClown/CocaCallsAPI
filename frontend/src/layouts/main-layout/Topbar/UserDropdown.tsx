@@ -1,12 +1,23 @@
 import { Menu, Avatar, Button, Tooltip, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import IconifyIcon from 'components/base/IconifyIcon';
 import profile from 'assets/images/account/Profile.png';
-import { useState, MouseEvent, useCallback, ReactElement } from 'react';
+import { useState, MouseEvent, useCallback, ReactElement, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import userMenuItems from 'data/usermenu-items';
+import { useUser } from 'context/UserContext';
 
 const UserDropdown = (): ReactElement => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
+  const navigate = useNavigate();
+  const { user, fetchUser } = useUser();
+
+  useEffect(() => {
+    if (!user) {
+      fetchUser();
+    }
+  }, [user, fetchUser]);
+
 
   const handleUserClick = useCallback((event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -15,6 +26,13 @@ const UserDropdown = (): ReactElement => {
   const handleUserClose = useCallback(() => {
     setAnchorEl(null);
   }, []);
+
+  const handleMenuItemClick = useCallback((path: string) => {
+    if (path !== '!#') {
+      navigate(path);
+    }
+    handleUserClose();
+  }, [navigate, handleUserClose]);
 
   return (
     <>
@@ -38,7 +56,7 @@ const UserDropdown = (): ReactElement => {
         }}
       >
         <Tooltip title="CocaCalls" arrow placement="bottom">
-          <Avatar src={profile} sx={{ width: 44, height: 44 }} />
+          <Avatar src={user?.Picture} sx={{ width: 44, height: 44 }} />
         </Tooltip>
         <IconifyIcon
           color="common.white"
@@ -66,7 +84,7 @@ const UserDropdown = (): ReactElement => {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         {userMenuItems.map((userMenuItem) => (
-          <MenuItem key={userMenuItem.id} onClick={handleUserClose}>
+          <MenuItem key={userMenuItem.id} onClick={() => handleMenuItemClick(userMenuItem.path)}>
             <ListItemIcon
               sx={{
                 minWidth: `0 !important`,

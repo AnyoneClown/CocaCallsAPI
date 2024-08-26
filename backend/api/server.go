@@ -57,6 +57,7 @@ func (s *Server) Start() error {
 	userRouter := apiRouter.PathPrefix("/users").Subrouter()
 	userRouter.Use(AuthenticationMiddleware)
 	userRouter.HandleFunc("/", s.defaultHandler.GetUsers).Methods("GET")
+	userRouter.HandleFunc("/{userID}/", s.defaultHandler.GetUser).Methods("GET")
 
 	// Configure CORS
 	corsOptions := cors.New(cors.Options{

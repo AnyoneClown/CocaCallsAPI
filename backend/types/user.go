@@ -24,19 +24,6 @@ type User struct {
 	Subscription  Subscription   `gorm:"foreignKey:UserID"`
 }
 
-type UserResponse struct {
-	ID            uuid.UUID
-	Email         string
-	Picture       string
-	Provider      string
-	VerifiedEmail bool
-	IsAdmin       bool
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	DeletedAt     gorm.DeletedAt
-	Subscription  *Subscription `gorm:"foreignKey:UserID"`
-}
-
 type UserToCreate struct {
 	Email         string
 	Password      string

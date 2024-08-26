@@ -6,6 +6,7 @@ import Splash from 'components/loading/Splash';
 import { rootPaths } from './paths';
 import paths from './paths';
 import AuthGuard from './AuthGuard.tsx';
+import { UserProvider } from 'context/UserProvider.tsx';
 
 const App = lazy<() => ReactElement>(() => import('App'));
 
@@ -21,6 +22,7 @@ const Login = lazy<() => ReactElement>(() => import('pages/authentication/Login'
 const SignUp = lazy<() => ReactElement>(() => import('pages/authentication/SignUp'));
 const OAuthCallbackPage = lazy<() => ReactElement>(() => import('pages/authentication/OAuthCallbackPage'));
 const ErrorPage = lazy<() => ReactElement>(() => import('pages/error/ErrorPage'));
+const ProfilePage = lazy<() => ReactElement>(() => import('pages/profile/ProfilePage'));
 
 const routes: RouteObject[] = [
   {
@@ -34,17 +36,23 @@ const routes: RouteObject[] = [
         path: paths.home,
         element: (
           <AuthGuard>
-            <MainLayout>
-              <Suspense fallback={<PageLoader />}>
-                <Outlet />
-              </Suspense>
-            </MainLayout>
+            <UserProvider>
+              <MainLayout>
+                <Suspense fallback={<PageLoader />}>
+                  <Outlet />
+                </Suspense>
+              </MainLayout>
+            </UserProvider>
           </AuthGuard>
         ),
         children: [
           {
             index: true,
             element: <Dashboard />,
+          },
+          {
+            path: paths.profile,
+            element: <ProfilePage />,
           },
         ],
       },
