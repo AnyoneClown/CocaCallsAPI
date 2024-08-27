@@ -73,7 +73,6 @@ func (h *DefaultHandler) HandleJWTCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	
 	match := utils.CheckPasswordHash(req.Password, user.Password)
 	if !match {
 		log.Printf("Password does not match for user: %v", req.Email)
