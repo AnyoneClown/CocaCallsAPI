@@ -12,14 +12,11 @@ import (
 )
 
 type AWSConfig struct {
-	AccessKeyID     string
-	AccessKeySecret string
-	Region          string
-	BucketName      string
-	UploadTimeout   int
-	BaseURL         string
+    Region          string
+    AccessKeyID     string
+    AccessKeySecret string
+    Bucket          string
 }
-
 func CreateSession(awsConfig AWSConfig) *session.Session {
 	sess := session.Must(session.NewSession(
 		&aws.Config{
