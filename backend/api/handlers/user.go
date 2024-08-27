@@ -2,10 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"os"
+	"path/filepath"
 
 	"github.com/AnyoneClown/CocaCallsAPI/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 )
 
@@ -36,39 +40,41 @@ func (h *DefaultHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
     awsConfig := utils.AWSConfig{
         Region:          utils.GetEnvVariable("AWS_REGION"),
         AccessKeyID:     utils.GetEnvVariable("AWS_ACCESS_KEY"),
-        AccessKeySecret: utils.GetEnvVariable("AWS_SECRET_KY"),
+        AccessKeySecret: utils.GetEnvVariable("AWS_SECRET_KEY"),
         Bucket:          utils.GetEnvVariable("AWS_BUCKET"),
     }
 
-    sess := utils.CreateSession(awsConfig)
+    log.Printf("AWS Config: Region: %s, Bucket: %s", awsConfig.Region, awsConfig.Bucket)
+
+    sess:= utils.CreateSession(awsConfig)
 
     file, header, err := r.FormFile("file")
     if err != nil {
+        log.Printf("Error reading file: %v", err)
         http.Error(w, "Unable to read file", http.StatusBadRequest)
         return
     }
     defer file.Close()
 
-    tempFilePath := "/tmp/" + header.Filename
-    tempFile, err := os.Create(tempFilePath)
-    if err != nil {
-        http.Error(w, "Unable to create temp file", http.StatusInternalServerError)
-        return
-    }
-    defer tempFile.Close()
+    filename := filepath.Base(header.Filename)
+    log.Printf("Attempting to upload file: %s", filename)
 
-    _, err = tempFile.ReadFrom(file)
-    if err != nil {
-        http.Error(w, "Unable to save temp file", http.StatusInternalServerError)
-        return
-    }
+    uploader := s3manager.NewUploader(sess)
+    result, err := uploader.Upload(&s3manager.UploadInput{
+        Bucket: aws.String(awsConfig.Bucket),
+        Key:    aws.String(filename),
+        Body:   file,
+    })
 
-    err = utils.UploadObject(awsConfig.Bucket, tempFilePath, header.Filename, sess, awsConfig)
     if err != nil {
+        log.Printf("Error uploading to S3: %v", err)
+        if aerr, ok := err.(awserr.Error); ok {
+            log.Printf("AWS Error Code: %s, Message: %s", aerr.Code(), aerr.Message())
+        }
         http.Error(w, "Unable to upload file to S3", http.StatusInternalServerError)
         return
     }
 
-    fileURL := utils.GetFileURL(awsConfig.Bucket, header.Filename, sess)
-    fmt.Fprintf(w, "File uploaded successfully: %s", fileURL)
+    log.Printf("File uploaded successfully. URL: %s", result.Location)
+    fmt.Fprintf(w, "File uploaded successfully: %s", result.Location)
 }
