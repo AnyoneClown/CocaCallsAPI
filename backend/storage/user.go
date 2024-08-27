@@ -72,17 +72,17 @@ func (c *CockroachDB) GetUserByEmail(email string) (types.User, error) {
 }
 
 func (c *CockroachDB) GetUserByID(userID string) (types.User, error) {
-    var user types.User
-    result := c.db.Preload("Subscription").Omit("password").Where("id = ?", userID).First(&user)
+	var user types.User
+	result := c.db.Preload("Subscription").Omit("password").Where("id = ?", userID).First(&user)
 
-    if result.Error != nil {
-        if result.Error == gorm.ErrRecordNotFound {
-            return types.User{}, fmt.Errorf("user not found")
-        }
-        return types.User{}, result.Error
-    }
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return types.User{}, fmt.Errorf("user not found")
+		}
+		return types.User{}, result.Error
+	}
 
-    return user, nil
+	return user, nil
 }
 
 func (c *CockroachDB) UpdateUser(user *types.User) error {

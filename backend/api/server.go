@@ -60,7 +60,7 @@ func (s *Server) Start() error {
 	userRouter.HandleFunc("/{userID}/", s.defaultHandler.GetUser).Methods("GET")
 
 	// Test handler for uploading image
-	r.HandleFunc("/upload", s.defaultHandler.UploadHandler).Methods("POST")
+	// r.HandleFunc("/upload", s.defaultHandler.UploadHandler).Methods("POST")
 
 	// Configure CORS
 	corsOptions := cors.New(cors.Options{
