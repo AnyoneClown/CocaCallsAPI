@@ -29,3 +29,18 @@ func (h *DefaultHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.SendDataResponse(w, "Users retrieved successfully", http.StatusOK, user)
 }
+
+func (h *DefaultHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	file, header, err := r.FormFile("file")
+    if err != nil {
+        utils.SendErrorResponse(w, "Failed to retrieve file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+
+	
+
+	utils.SendDataResponse(w, "Users retrieved successfully", http.StatusOK, user)
+}

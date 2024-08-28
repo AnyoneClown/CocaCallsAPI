@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/AnyoneClown/CocaCallsAPI/types"
@@ -86,13 +87,15 @@ func (c *CockroachDB) GetUserByID(userID string) (types.User, error) {
 }
 
 func (c *CockroachDB) UpdateUser(user *types.User) error {
-	query := `
-        UPDATE users
-        SET google_id = $1, picture = $2, provider = $3, verified_email = $4, updated_at = $5
-        WHERE email = $6
-    `
-
-	result := c.db.Exec(query, user.GoogleID, user.Picture, user.Provider, user.VerifiedEmail, time.Now(), user.Email)
+	result := c.db.Model(&types.User{}).
+		Where("email = ?", user.Email).
+		Updates(map[string]interface{}{
+			"google_id":      user.GoogleID,
+			"picture":        user.Picture,
+			"provider":       user.Provider,
+			"verified_email": user.VerifiedEmail,
+			"updated_at":     time.Now(),
+		})
 	if result.Error != nil {
 		log.Println("Failed to execute update statement:", result.Error)
 		return result.Error
@@ -111,3 +114,16 @@ func (c *CockroachDB) GetUsers() ([]types.User, error) {
 
 	return userResponses, nil
 }
+
+func (c *CockroachDB) UpdateProfilePicture(id string, picture string) error {
+    result := c.db.Model(&types.User{}).
+        Where("id = ?", id).
+        Update("picture", picture)
+    if result.Error != nil {
+        log.Println("Failed to update profile picture:", result.Error)
+        return result.Error
+    }
+
+    return nil
+}
+
