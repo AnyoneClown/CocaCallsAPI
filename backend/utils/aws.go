@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"mime/multipart"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -44,21 +45,38 @@ func CreateSession(awsConfig AWSConfig) aws.Config {
 	return cfg
 }
 
-func UploadObject(awsConfig AWSConfig, filename string, file *os.File) error {
-	cfg := CreateSession(awsConfig)
-	uploader := manager.NewUploader(s3.NewFromConfig(cfg))
+func UploadObject(awsConfig AWSConfig, s3Key string, file multipart.File) error {
+    cfg := CreateSession(awsConfig)
+    uploader := manager.NewUploader(s3.NewFromConfig(cfg))
 
-	result, err := uploader.Upload(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(awsConfig.Bucket),
-		Key:    aws.String(filename),
-		Body:   file,
-	})
+    _, err := uploader.Upload(context.Background(), &s3.PutObjectInput{
+        Bucket: aws.String(awsConfig.Bucket),
+        Key:    aws.String(s3Key),
+        Body:   file,
+    })
 
-	if err != nil {
-		log.Printf("Error uploading to S3: %v", err)
-		return fmt.Errorf("unable to upload file to S3: %v", err)
-	}
+    if err != nil {
+        log.Printf("Error uploading to S3: %v", err)
+        return fmt.Errorf("unable to upload file to S3: %v", err)
+    }
 
-	log.Printf("File uploaded successfully. URL: %s", result.Location)
-	return nil
+    log.Printf("File uploaded successfully. Key: %s", s3Key)
+    return nil
+}
+
+func GetPresignURL(awsConfig AWSConfig, s3Key string) string {
+    cfg := CreateSession(awsConfig)
+    s3client := s3.NewFromConfig(cfg)
+    presignClient := s3.NewPresignClient(s3client)
+    presignedUrl, err := presignClient.PresignGetObject(context.Background(),
+        &s3.GetObjectInput{
+            Bucket: aws.String(awsConfig.Bucket),
+            Key:    aws.String(s3Key),
+        },
+        s3.WithPresignExpires(time.Minute*15))
+    if err != nil {
+        log.Printf("Error generating presigned URL: %v", err)
+        return ""
+    }
+    return presignedUrl.URL
 }

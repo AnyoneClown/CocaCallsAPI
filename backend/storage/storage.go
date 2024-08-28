@@ -10,7 +10,7 @@ import (
 )
 
 type CockroachDB struct {
-	db *gorm.DB
+	DB *gorm.DB
 }
 
 func NewCockroachDB() *CockroachDB {
@@ -29,5 +29,5 @@ func NewCockroachDB() *CockroachDB {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	return &CockroachDB{db: db}
+	return &CockroachDB{DB: db}
 }

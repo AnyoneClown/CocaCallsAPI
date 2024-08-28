@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/AnyoneClown/CocaCallsAPI/types"
@@ -23,14 +22,14 @@ func (c *CockroachDB) CreateUser(user types.UserToCreate) (types.User, error) {
 	}
 
 	var existingUser types.User
-	if err := c.db.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
+	if err := c.DB.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
 		return types.User{}, fmt.Errorf("email already in use")
 	} else if err != gorm.ErrRecordNotFound {
 		return types.User{}, err
 	}
 
 	if user.Provider != "" {
-		if err := c.db.Where("google_id = ?", user.GoogleID).First(&existingUser).Error; err == nil {
+		if err := c.DB.Where("google_id = ?", user.GoogleID).First(&existingUser).Error; err == nil {
 			return types.User{}, fmt.Errorf("Google ID already in use")
 		} else if err != gorm.ErrRecordNotFound {
 			return types.User{}, err
@@ -50,7 +49,7 @@ func (c *CockroachDB) CreateUser(user types.UserToCreate) (types.User, error) {
 		UpdatedAt:     time.Now(),
 	}
 
-	result := c.db.Create(&userToCreate)
+	result := c.DB.Create(&userToCreate)
 	if result.Error != nil {
 		return types.User{}, result.Error
 	}
@@ -60,7 +59,7 @@ func (c *CockroachDB) CreateUser(user types.UserToCreate) (types.User, error) {
 
 func (c *CockroachDB) GetUserByEmail(email string) (types.User, error) {
 	var user types.User
-	result := c.db.Preload("Subscription").Where("email = ?", email).First(&user)
+	result := c.DB.Preload("Subscription").Where("email = ?", email).First(&user)
 
 	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -74,7 +73,7 @@ func (c *CockroachDB) GetUserByEmail(email string) (types.User, error) {
 
 func (c *CockroachDB) GetUserByID(userID string) (types.User, error) {
 	var user types.User
-	result := c.db.Preload("Subscription").Omit("password").Where("id = ?", userID).First(&user)
+	result := c.DB.Preload("Subscription").Omit("password").Where("id = ?", userID).First(&user)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -87,7 +86,7 @@ func (c *CockroachDB) GetUserByID(userID string) (types.User, error) {
 }
 
 func (c *CockroachDB) UpdateUser(user *types.User) error {
-	result := c.db.Model(&types.User{}).
+	result := c.DB.Model(&types.User{}).
 		Where("email = ?", user.Email).
 		Updates(map[string]interface{}{
 			"google_id":      user.GoogleID,
@@ -106,7 +105,7 @@ func (c *CockroachDB) UpdateUser(user *types.User) error {
 
 func (c *CockroachDB) GetUsers() ([]types.User, error) {
 	var userResponses []types.User
-	if err := c.db.Preload("Subscription").
+	if err := c.DB.Preload("Subscription").
 		Omit("password").
 		Find(&userResponses).Error; err != nil {
 		return nil, err
@@ -115,10 +114,10 @@ func (c *CockroachDB) GetUsers() ([]types.User, error) {
 	return userResponses, nil
 }
 
-func (c *CockroachDB) UpdateProfilePicture(id string, picture string) error {
-    result := c.db.Model(&types.User{}).
+func (c *CockroachDB) UpdateProfilePicture(id string, s3Key string) error {
+    result := c.DB.Model(&types.User{}).
         Where("id = ?", id).
-        Update("picture", picture)
+        Update("picture", s3Key)
     if result.Error != nil {
         log.Println("Failed to update profile picture:", result.Error)
         return result.Error
@@ -126,4 +125,3 @@ func (c *CockroachDB) UpdateProfilePicture(id string, picture string) error {
 
     return nil
 }
-

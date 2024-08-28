@@ -23,7 +23,7 @@ func NewServer(listenAddr string, storage storage.CockroachDB) *Server {
 		listenAddr: listenAddr,
 		storage:    storage,
 		defaultHandler: &handlers.DefaultHandler{
-			Storage: storage,
+			Storage: &storage,
 		},
 	}
 }
@@ -58,9 +58,7 @@ func (s *Server) Start() error {
 	userRouter.Use(AuthenticationMiddleware)
 	userRouter.HandleFunc("/", s.defaultHandler.GetUsers).Methods("GET")
 	userRouter.HandleFunc("/{userID}/", s.defaultHandler.GetUser).Methods("GET")
-
-	// Test handler for uploading image
-	// r.HandleFunc("/upload", s.defaultHandler.UploadHandler).Methods("POST")
+	userRouter.HandleFunc("/picture/{userID}/", s.defaultHandler.UpdateUserProfilePicture).Methods("PUT")
 
 	// Configure CORS
 	corsOptions := cors.New(cors.Options{
