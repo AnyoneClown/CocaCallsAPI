@@ -1,7 +1,7 @@
-import React, { useEffect, useState, ReactElement } from 'react';
+import React, { useEffect, useState, useRef, ReactElement } from 'react';
 import { getToken, getUserIDFromToken } from 'api/auth';
-import { Box, Grid, Paper, Typography, Avatar, Divider } from '@mui/material';
-import { Email, Verified, AdminPanelSettings, CalendarToday } from '@mui/icons-material';
+import { Box, Grid, Paper, Typography, Avatar, Tooltip, IconButton, Divider } from '@mui/material';
+import { Email, Verified, AdminPanelSettings, CalendarToday, CameraAlt } from '@mui/icons-material';
 
 interface Subscription {
   ID: string;
@@ -23,6 +23,7 @@ interface User {
 
 const ProfilePage = (): ReactElement => {
   const [user, setUser] = useState<User | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,6 +56,36 @@ const ProfilePage = (): ReactElement => {
     fetchUserData();
   }, []);
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const token = getToken();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`http://localhost:8080/api/users/picture/${user.ID}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Failed to upload profile picture');
+
+      const updatedUser = { ...user, Picture: URL.createObjectURL(file) };
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
   if (!user) {
     return <Typography>Loading...</Typography>;
   }
@@ -67,15 +98,45 @@ const ProfilePage = (): ReactElement => {
   return (
     <Box sx={{ p: 3, backgroundColor: '#1e1e2d', color: 'white', minHeight: '100vh' }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+         <Grid item xs={12} md={4}>
           <Paper elevation={3} sx={{ p: 3, backgroundColor: '#2a2a3c', height: '100%' }}>
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <Avatar src={user.Picture} alt="User Profile" sx={{ width: 120, height: 120, mb: 2 }} />
+            <Box display="flex" flexDirection="column" alignItems="center" position="relative">
+              <Tooltip title="Click to update your profile picture" placement="top">
+                <Box sx={{ position: 'relative', cursor: 'pointer', '&:hover .camera-icon': { opacity: 1 } }} onClick={handleAvatarClick}>
+                  <Avatar
+                    src={user.Picture}
+                    alt="User Profile"
+                    sx={{ width: 120, height: 120, mb: 2 }}
+                  />
+                  <IconButton
+                    className="camera-icon"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                      color: 'white',
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    <CameraAlt sx={{ fontSize: 40 }} />
+                  </IconButton>
+                </Box>
+              </Tooltip>
+              <input
+                ref={fileInputRef}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
               <Typography variant="h5" color="common.white" sx={{ wordBreak: 'break-word', textAlign: 'center' }}>{user.Email}</Typography>
-              <Typography variant="body2" color="textSecondary">{user.Provider}</Typography>
             </Box>
           </Paper>
         </Grid>
+
 
         <Grid item xs={12} md={8}>
           <Paper elevation={3} sx={{ p: 3, backgroundColor: '#2a2a3c', height: '100%' }}>
@@ -144,4 +205,4 @@ const ProfilePage = (): ReactElement => {
   );
 };
 
-export default ProfilePage;``
+export default ProfilePage;
