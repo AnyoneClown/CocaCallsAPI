@@ -3,9 +3,11 @@ package storage
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/AnyoneClown/CocaCallsAPI/types"
+	"github.com/AnyoneClown/CocaCallsAPI/utils"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -30,7 +32,7 @@ func (c *CockroachDB) CreateUser(user types.UserToCreate) (types.User, error) {
 
 	if user.Provider != "" {
 		if err := c.DB.Where("google_id = ?", user.GoogleID).First(&existingUser).Error; err == nil {
-			return types.User{}, fmt.Errorf("Google ID already in use")
+			return types.User{}, fmt.Errorf("google ID already in use")
 		} else if err != gorm.ErrRecordNotFound {
 			return types.User{}, err
 		}
@@ -82,6 +84,13 @@ func (c *CockroachDB) GetUserByID(userID string) (types.User, error) {
 		return types.User{}, result.Error
 	}
 
+	awsConfig := utils.GetAWSConfig()
+	folder := "profile-pictures/"
+	if !strings.HasPrefix(user.Picture, folder) {
+		user.Picture = folder + user.Picture
+	}
+	user.Picture = utils.GetPresignURL(awsConfig, user.Picture)
+	log.Println("Presigned URL:", user.Picture)
 	return user, nil
 }
 
@@ -115,13 +124,13 @@ func (c *CockroachDB) GetUsers() ([]types.User, error) {
 }
 
 func (c *CockroachDB) UpdateProfilePicture(id string, s3Key string) error {
-    result := c.DB.Model(&types.User{}).
-        Where("id = ?", id).
-        Update("picture", s3Key)
-    if result.Error != nil {
-        log.Println("Failed to update profile picture:", result.Error)
-        return result.Error
-    }
+	result := c.DB.Model(&types.User{}).
+		Where("id = ?", id).
+		Update("picture", s3Key)
+	if result.Error != nil {
+		log.Println("Failed to update profile picture:", result.Error)
+		return result.Error
+	}
 
-    return nil
+	return nil
 }

@@ -35,7 +35,7 @@ func (h *DefaultHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *DefaultHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-    userID := vars["userID"]
+	userID := vars["userID"]
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
@@ -43,17 +43,19 @@ func (h *DefaultHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http
 		return
 	}
 	defer file.Close()
-	
+
 	ext := filepath.Ext(header.Filename)
 	uniqueFileName := fmt.Sprintf("%s%s", uuid.New().String(), ext)
 	s3Key := fmt.Sprintf("profile-pictures/%s", uniqueFileName)
 
 	// Start a transaction
+	tx := h.Storage.DB.Begin()
 
 	// Upload image to S3 bucket
 	awsConfig := utils.GetAWSConfig()
 	err = utils.UploadObject(awsConfig, s3Key, file)
 	if err != nil {
+		tx.Rollback()
 		utils.SendErrorResponse(w, "Unable to upload file to S3", http.StatusInternalServerError)
 		return
 	}
@@ -61,10 +63,10 @@ func (h *DefaultHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http
 	// Update image in db
 	err = h.Storage.UpdateProfilePicture(userID, uniqueFileName)
 	if err != nil {
+		tx.Rollback()
 		utils.SendErrorResponse(w, "Failed to update user picture", http.StatusInternalServerError)
 		return
 	}
-
 
 	presignedURL := utils.GetPresignURL(awsConfig, s3Key)
 
@@ -74,5 +76,6 @@ func (h *DefaultHandler) UpdateUserProfilePicture(w http.ResponseWriter, r *http
 		ImageURL: presignedURL,
 	}
 
+	tx.Commit()
 	utils.SendDataResponse(w, "Profile picture updated successfully", http.StatusOK, response)
 }
