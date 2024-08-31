@@ -22,16 +22,15 @@ export async function fetchCustomerData() {
     rows = data.map((user: any) => ({
       id: user.ID,
       email: user.Email,
-      picture: user.Picture,
       provider: user.Provider,
       'verified-email': user.VerifiedEmail,
       'is-admin': user.IsAdmin,
       'created-at': user.CreatedAt,
       'updated-at': user.UpdatedAt,
       'deleted-at': user.DeletedAt,
-      'subscription-id': user.Subscription.ID,
-      'subscription-start': user.Subscription.StartDate,
-      'subscription-end': user.Subscription.EndDate,
+      'subscription-id': user.Subscription?.ID ?? null,
+      'subscription-start': user.Subscription?.StartDate ?? null,
+      'subscription-end': user.Subscription?.EndDate ?? null,
     }));
   } catch (error) {
     console.error('Failed to fetch customer data:', error);

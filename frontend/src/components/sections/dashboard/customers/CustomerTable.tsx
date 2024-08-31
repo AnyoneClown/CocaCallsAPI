@@ -19,6 +19,11 @@ import CustomNoResultsOverlay from 'components/common/CustomNoResultsOverlay';
 
 import { format } from 'date-fns';
 
+const formatDate = (date: string | null) => {
+  if (!date) return '-';
+  return format(new Date(date), 'dd.MM.yyyy HH:mm:ss');
+};
+
 const columns: GridColDef<any>[] = [
   {
     field: 'id',
@@ -34,25 +39,14 @@ const columns: GridColDef<any>[] = [
     minWidth: 145,
   },
   {
-    field: 'picture',
-    headerName: 'Picture',
-    renderCell: (params: GridRenderCellParams<any, any, any, GridTreeNodeWithRender>) => {
-      return (
-        <Tooltip title={params.row.picture} placement="top" arrow>
-          <Avatar src={params.row.picture} />
-        </Tooltip>
-      );
-    },
-    resizable: false,
-    flex: 1,
-    minWidth: 100,
-  },
-  {
     field: 'is-admin',
     headerName: 'Is Admin',
     resizable: false,
     flex: 1,
     minWidth: 100,
+    renderCell: (params: GridRenderCellParams) => {
+      return params.value ? 'Yes' : 'No';
+    },
   },
   {
     field: 'created-at',
@@ -60,9 +54,7 @@ const columns: GridColDef<any>[] = [
     resizable: false,
     flex: 1,
     minWidth: 150,
-    renderCell: (params: GridRenderCellParams) => {
-      return format(new Date(params.row['created-at']), 'dd.MM.yyyy HH:mm:ss');
-    },
+    renderCell: (params: GridRenderCellParams) => formatDate(params.row['created-at']),
   },
   {
     field: 'updated-at',
@@ -70,9 +62,7 @@ const columns: GridColDef<any>[] = [
     resizable: false,
     flex: 1,
     minWidth: 150,
-    renderCell: (params: GridRenderCellParams) => {
-      return format(new Date(params.row['updated-at']), 'dd.MM.yyyy HH:mm:ss');
-    },
+    renderCell: (params: GridRenderCellParams) => formatDate(params.row['updated-at']),
   },
   {
     field: 'deleted-at',
@@ -80,11 +70,7 @@ const columns: GridColDef<any>[] = [
     resizable: false,
     flex: 1,
     minWidth: 150,
-    renderCell: (params: GridRenderCellParams) => {
-      return params.row['deleted-at'] 
-        ? format(new Date(params.row['deleted-at']), 'dd.MM.yyyy HH:mm:ss')
-        : '-';
-    },
+    renderCell: (params: GridRenderCellParams) => formatDate(params.row['deleted-at']),
   },
   {
     field: 'subscription-start',
@@ -92,9 +78,7 @@ const columns: GridColDef<any>[] = [
     resizable: false,
     flex: 1,
     minWidth: 150,
-    renderCell: (params: GridRenderCellParams) => {
-      return format(new Date(params.row['subscription-start']), 'dd.MM.yyyy HH:mm:ss');
-    },
+    renderCell: (params: GridRenderCellParams) => formatDate(params.row['subscription-start']),
   },
   {
     field: 'subscription-end',
@@ -102,9 +86,7 @@ const columns: GridColDef<any>[] = [
     resizable: false,
     flex: 1,
     minWidth: 150,
-    renderCell: (params: GridRenderCellParams) => {
-      return format(new Date(params.row['subscription-end']), 'dd.MM.yyyy HH:mm:ss');
-    },
+    renderCell: (params: GridRenderCellParams) => formatDate(params.row['subscription-end']),
   },
   {
     field: 'actions',
