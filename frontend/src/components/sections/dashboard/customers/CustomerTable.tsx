@@ -53,7 +53,6 @@ const columns: GridColDef<any>[] = [
     resizable: false,
     flex: 1,
     minWidth: 100,
-    valueFormatter: (params) => (params.value ? 'Yes' : 'No'),
   },
   {
     field: 'created-at',
