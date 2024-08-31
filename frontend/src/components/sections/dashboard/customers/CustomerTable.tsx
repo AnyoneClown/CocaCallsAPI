@@ -17,6 +17,8 @@ import { currencyFormat } from 'helpers/format-functions';
 import CustomPagination from 'components/common/CustomPagination';
 import CustomNoResultsOverlay from 'components/common/CustomNoResultsOverlay';
 
+import { format } from 'date-fns';
+
 const columns: GridColDef<any>[] = [
   {
     field: 'id',
@@ -25,58 +27,84 @@ const columns: GridColDef<any>[] = [
     minWidth: 60,
   },
   {
-    field: 'name',
-    headerName: 'Name',
-    valueGetter: (params: any) => {
-      return params;
-    },
+    field: 'email',
+    headerName: 'Email',
+    resizable: false,
+    flex: 1,
+    minWidth: 145,
+  },
+  {
+    field: 'picture',
+    headerName: 'Picture',
     renderCell: (params: GridRenderCellParams<any, any, any, GridTreeNodeWithRender>) => {
       return (
-        <Stack direction="row" gap={1} alignItems="center">
-          <Tooltip title={params.row.name} placement="top" arrow>
-            <Avatar {...stringAvatar(params.row.name)} />
-          </Tooltip>
-          <Typography variant="body2">{params.row.name}</Typography>
-        </Stack>
+        <Tooltip title={params.row.picture} placement="top" arrow>
+          <Avatar src={params.row.picture} />
+        </Tooltip>
       );
     },
     resizable: false,
     flex: 1,
-    minWidth: 155,
+    minWidth: 100,
   },
   {
-    field: 'email',
-    headerName: 'Email',
-    resizable: false,
-    flex: 0.5,
-    minWidth: 145,
-  },
-  {
-    field: 'phone',
-    headerName: 'Phone',
+    field: 'is-admin',
+    headerName: 'Is Admin',
     resizable: false,
     flex: 1,
-    minWidth: 115,
+    minWidth: 100,
+    valueFormatter: (params) => (params.value ? 'Yes' : 'No'),
   },
   {
-    field: 'billing-address',
-    headerName: 'Billing Address',
-    sortable: false,
+    field: 'created-at',
+    headerName: 'Created At',
     resizable: false,
     flex: 1,
-    minWidth: 250,
+    minWidth: 150,
+    renderCell: (params: GridRenderCellParams) => {
+      return format(new Date(params.row['created-at']), 'dd.MM.yyyy HH:mm:ss');
+    },
   },
   {
-    field: 'total-spent',
-    headerName: 'Total Spent',
+    field: 'updated-at',
+    headerName: 'Updated At',
     resizable: false,
-    sortable: false,
-    align: 'right',
-    headerAlign: 'right',
     flex: 1,
-    minWidth: 80,
-    valueFormatter: (value) => {
-      return currencyFormat(value, { minimumFractionDigits: 2 });
+    minWidth: 150,
+    renderCell: (params: GridRenderCellParams) => {
+      return format(new Date(params.row['updated-at']), 'dd.MM.yyyy HH:mm:ss');
+    },
+  },
+  {
+    field: 'deleted-at',
+    headerName: 'Deleted At',
+    resizable: false,
+    flex: 1,
+    minWidth: 150,
+    renderCell: (params: GridRenderCellParams) => {
+      return params.row['deleted-at'] 
+        ? format(new Date(params.row['deleted-at']), 'dd.MM.yyyy HH:mm:ss')
+        : '-';
+    },
+  },
+  {
+    field: 'subscription-start',
+    headerName: 'Subscription Start',
+    resizable: false,
+    flex: 1,
+    minWidth: 150,
+    renderCell: (params: GridRenderCellParams) => {
+      return format(new Date(params.row['subscription-start']), 'dd.MM.yyyy HH:mm:ss');
+    },
+  },
+  {
+    field: 'subscription-end',
+    headerName: 'Subscription End',
+    resizable: false,
+    flex: 1,
+    minWidth: 150,
+    renderCell: (params: GridRenderCellParams) => {
+      return format(new Date(params.row['subscription-end']), 'dd.MM.yyyy HH:mm:ss');
     },
   },
   {
@@ -118,6 +146,7 @@ const columns: GridColDef<any>[] = [
     },
   },
 ];
+
 const CustomerTable = ({ searchText }: { searchText: string }): ReactElement => {
   const apiRef = useGridApiRef<GridApi>();
 
