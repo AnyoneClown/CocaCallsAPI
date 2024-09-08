@@ -21,7 +21,7 @@ type User struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
-	Subscription  *Subscription   `gorm:"foreignKey:UserID"`
+	Subscription  *Subscription  `gorm:"foreignKey:UserID"`
 }
 
 type UserToCreate struct {

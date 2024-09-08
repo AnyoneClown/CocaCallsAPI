@@ -60,6 +60,11 @@ func (s *Server) Start() error {
 	userRouter.HandleFunc("/{userID}/", s.defaultHandler.GetUser).Methods("GET")
 	userRouter.HandleFunc("/picture/{userID}/", s.defaultHandler.UpdateUserProfilePicture).Methods("PUT")
 
+	// Subscription routes
+	subRouter := apiRouter.PathPrefix("/subscription").Subrouter()
+	subRouter.Use(AuthenticationMiddleware)
+	subRouter.HandleFunc("/", s.defaultHandler.CreateSubscription).Methods("POST")
+
 	// Configure CORS
 	corsOptions := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
